@@ -65,6 +65,7 @@ body{font-family:'Jua','BM Jua','Apple SD Gothic Neo','Malgun Gothic',sans-serif
 .grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
 .grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;}
 h1{font-size:32px;text-align:center;margin:6px 0 2px;letter-spacing:1px;}
+.famtag{text-align:center;font-size:13px;color:var(--ink-soft);letter-spacing:2px;margin-top:2px;}
 h2{font-size:23px;margin-bottom:10px;}
 .sub{color:var(--ink-soft);font-size:16px;text-align:center;margin-bottom:14px;}
 
@@ -357,17 +358,13 @@ const DB_KEY='hangul12-data-v2';
 let DB={pin:null,users:[],progress:{}};
 let storageOK=true;
 async function loadDB(){
-  try{const r=await window.storage.get(DB_KEY);if(r&&r.value){DB=JSON.parse(r.value);}}
-  catch(e){
-    try{const old=await window.storage.get('hangul12-data-v1');
-      if(old&&old.value){const o=JSON.parse(old.value);
-        DB.pin=o.pin||null;DB.users=(o.users||[]).map(u=>({name:u.name,g:'boy'}));}}catch(e2){}
-  }
+  try{const raw=localStorage.getItem(DB_KEY);if(raw){DB=JSON.parse(raw);}}
+  catch(e){storageOK=false;}
   if(!DB.users)DB.users=[];if(!DB.progress)DB.progress={};
   if(DB.users.length===0){DB.users.push({name:'체험 친구',g:'boy'});await saveDB();}
 }
 async function saveDB(){
-  try{const r=await window.storage.set(DB_KEY,JSON.stringify(DB));if(!r)storageOK=false;}
+  try{localStorage.setItem(DB_KEY,JSON.stringify(DB));}
   catch(e){storageOK=false;}
 }
 const state={screen:'profiles',user:null,theme:'animal',stage:null,game:null,chal:null,
@@ -732,6 +729,7 @@ function rProfiles(){
   app.innerHTML=`
    <div class="top"><span class="chip">🏠 한글 친구들</span><span class="spacer"></span>
      <button class="iconbtn" id="gearBtn" title="부모님 방">⚙️</button></div>
+   <div class="famtag">시시태태가족</div>
    <h1>한글 친구들</h1>
    <div class="sub">십이간지 친구들과 떠나는 한글 모험!</div>
    <div class="guide"><div class="face">🐭</div>
