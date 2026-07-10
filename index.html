@@ -303,6 +303,11 @@ h2{font-size:23px;margin-bottom:10px;}
 .trainrow.tumble .tcar{animation:puffA .5s ease;}
 .rail{height:6px;background:repeating-linear-gradient(90deg,#B9A88F 0 22px,transparent 22px 34px);border-radius:3px;margin-top:2px;position:relative;z-index:1;}
 
+
+/* ===== 그림 글자 ===== */
+.picto{display:block;margin:6px auto 2px;height:76px;max-width:96%;cursor:pointer;}
+.picto.mini{height:36px;margin:2px auto;cursor:inherit;}
+.picto.gig{animation:gigA .5s ease;}
 </style>
 </head>
 <body>
@@ -312,7 +317,7 @@ h2{font-size:23px;margin-bottom:10px;}
 <div id="app"></div>
 <script>
 /* ============================================================
-   한글 친구들 v4 — 목소리 선택·다음알 상시노출(쥐 옆)·낱말나라 난이도↓·하루제한 임시해제
+   한글 친구들 v4.4 — 나비 ㅣ 모음 누락 수정 + 자모 전수 검사 통과
    ============================================================ */
 /* ---------------- DATA: themes ---------------- */
 const THEMES={
@@ -395,18 +400,18 @@ const THEMES={
 };
 /* ---------------- DATA: friends / rewards ---------------- */
 const FRIENDS=[
- {n:'쭈쭈',e:'🐭',a:'쥐',pat:'radial-gradient(#9aa5b1 22%,transparent 23%) 0 0/16px 16px,radial-gradient(#9aa5b1 22%,transparent 23%) 8px 8px/16px 16px',lines:['안녕! 나는 쭈쭈야!','오늘도 같이 놀자!','너는 정말 대단해!']},
- {n:'음머',e:'🐮',a:'소',pat:'radial-gradient(#4a4a4a 30%,transparent 31%) 2px 4px/22px 20px',lines:['음머~ 반가워!','천천히 해도 괜찮아!','우리 같이 힘내자!']},
- {n:'아웅이',e:'🐯',a:'호랑이',pat:'repeating-linear-gradient(60deg,#ff9f43 0 6px,transparent 6px 16px)',lines:['어흥! 힘내라 힘!','너는 용감한 친구야!','으르렁~ 멋진걸!']},
- {n:'깡총이',e:'🐰',a:'토끼',pat:'radial-gradient(#ff9ecb 26%,transparent 27%) 0 0/18px 18px',lines:['깡총깡총! 신난다!','같이 뛰어 볼까?','아삭아삭 참 잘한다!']},
- {n:'용용이',e:'🐲',a:'용',pat:'radial-gradient(#57c99b 30%,transparent 31%) 0 0/14px 12px,radial-gradient(#57c99b 30%,transparent 31%) 7px 6px/14px 12px',lines:['용용~ 하늘을 날자!','너는 최고야!','구름 위에서 응원할게!']},
- {n:'스르륵',e:'🐍',a:'뱀',pat:'repeating-linear-gradient(45deg,#f5d76e 0 7px,transparent 7px 14px),repeating-linear-gradient(-45deg,#f5d76e 0 7px,transparent 7px 14px)',lines:['스르륵~ 안녕!','살금살금 글자를 찾자!','쉿, 집중하면 다 보여!']},
- {n:'히힝이',e:'🐴',a:'말',pat:'repeating-linear-gradient(90deg,#b98a5e 0 5px,transparent 5px 13px)',lines:['히힝! 달려 보자!','다그닥 다그닥!','바람처럼 씽씽!']},
- {n:'메에',e:'🐑',a:'양',pat:'radial-gradient(#e8e0d0 34%,transparent 35%) 0 0/13px 13px,radial-gradient(#e8e0d0 34%,transparent 35%) 6px 6px/13px 13px',lines:['메에~ 포근하지?','잘하고 있어!','구름 이불 덮고 쉬어 가!']},
- {n:'까꿍이',e:'🐵',a:'원숭이',pat:'radial-gradient(ellipse,#c98f4e 30%,transparent 31%) 0 0/20px 12px',lines:['까꿍! 나 잡아 봐라!','재밌게 놀자!','바나나만큼 달콤한 하루!']},
- {n:'꼬꼬',e:'🐔',a:'닭',pat:'repeating-linear-gradient(0deg,#ff6f61 0 5px,transparent 5px 14px)',lines:['꼬끼오! 아침이야!','꼬꼬댁, 참 잘했어!','알도 쏙쏙, 글자도 쏙쏙!']},
- {n:'멍멍이',e:'🐶',a:'개',pat:'radial-gradient(#d3a06a 24%,transparent 25%) 0 0/17px 17px,radial-gradient(#d3a06a 16%,transparent 17%) 9px 9px/17px 17px',lines:['멍멍! 반가워!','내가 옆에서 응원할게!','꼬리 살랑살랑, 기분 최고!']},
- {n:'꿀꿀이',e:'🐷',a:'돼지',pat:'radial-gradient(#ffb3c1 32%,transparent 33%) 0 0/20px 20px',lines:['꿀꿀! 다 모으면 잔치하자!','냠냠, 글자가 맛있다!','너랑 노는 게 제일 좋아!']}];
+ {n:'쭈쭈',vp:{p:1.5,r:1.08},e:'🐭',a:'쥐',pat:'radial-gradient(#9aa5b1 22%,transparent 23%) 0 0/16px 16px,radial-gradient(#9aa5b1 22%,transparent 23%) 8px 8px/16px 16px',lines:['안녕! 나는 쭈쭈야!','오늘도 같이 놀자!','너는 정말 대단해!']},
+ {n:'음머',vp:{p:0.65,r:0.82},e:'🐮',a:'소',pat:'radial-gradient(#4a4a4a 30%,transparent 31%) 2px 4px/22px 20px',lines:['음머~ 반가워!','천천히 해도 괜찮아!','우리 같이 힘내자!']},
+ {n:'아웅이',vp:{p:0.8,r:0.95},e:'🐯',a:'호랑이',pat:'repeating-linear-gradient(60deg,#ff9f43 0 6px,transparent 6px 16px)',lines:['어흥! 힘내라 힘!','너는 용감한 친구야!','으르렁~ 멋진걸!']},
+ {n:'깡총이',vp:{p:1.42,r:1.12},e:'🐰',a:'토끼',pat:'radial-gradient(#ff9ecb 26%,transparent 27%) 0 0/18px 18px',lines:['깡총깡총! 신난다!','같이 뛰어 볼까?','아삭아삭 참 잘한다!']},
+ {n:'용용이',vp:{p:0.72,r:0.9},e:'🐲',a:'용',pat:'radial-gradient(#57c99b 30%,transparent 31%) 0 0/14px 12px,radial-gradient(#57c99b 30%,transparent 31%) 7px 6px/14px 12px',lines:['용용~ 하늘을 날자!','너는 최고야!','구름 위에서 응원할게!']},
+ {n:'스르륵',vp:{p:1.15,r:0.85},e:'🐍',a:'뱀',pat:'repeating-linear-gradient(45deg,#f5d76e 0 7px,transparent 7px 14px),repeating-linear-gradient(-45deg,#f5d76e 0 7px,transparent 7px 14px)',lines:['스르륵~ 안녕!','살금살금 글자를 찾자!','쉿, 집중하면 다 보여!']},
+ {n:'히힝이',vp:{p:1.0,r:1.06},e:'🐴',a:'말',pat:'repeating-linear-gradient(90deg,#b98a5e 0 5px,transparent 5px 13px)',lines:['히힝! 달려 보자!','다그닥 다그닥!','바람처럼 씽씽!']},
+ {n:'메에',vp:{p:1.3,r:0.92},e:'🐑',a:'양',pat:'radial-gradient(#e8e0d0 34%,transparent 35%) 0 0/13px 13px,radial-gradient(#e8e0d0 34%,transparent 35%) 6px 6px/13px 13px',lines:['메에~ 포근하지?','잘하고 있어!','구름 이불 덮고 쉬어 가!']},
+ {n:'까꿍이',vp:{p:1.45,r:1.15},e:'🐵',a:'원숭이',pat:'radial-gradient(ellipse,#c98f4e 30%,transparent 31%) 0 0/20px 12px',lines:['까꿍! 나 잡아 봐라!','재밌게 놀자!','바나나만큼 달콤한 하루!']},
+ {n:'꼬꼬',vp:{p:1.35,r:1.02},e:'🐔',a:'닭',pat:'repeating-linear-gradient(0deg,#ff6f61 0 5px,transparent 5px 14px)',lines:['꼬끼오! 아침이야!','꼬꼬댁, 참 잘했어!','알도 쏙쏙, 글자도 쏙쏙!']},
+ {n:'멍멍이',vp:{p:1.05,r:1.0},e:'🐶',a:'개',pat:'radial-gradient(#d3a06a 24%,transparent 25%) 0 0/17px 17px,radial-gradient(#d3a06a 16%,transparent 17%) 9px 9px/17px 17px',lines:['멍멍! 반가워!','내가 옆에서 응원할게!','꼬리 살랑살랑, 기분 최고!']},
+ {n:'꿀꿀이',vp:{p:0.88,r:0.9},e:'🐷',a:'돼지',pat:'radial-gradient(#ffb3c1 32%,transparent 33%) 0 0/20px 20px',lines:['꿀꿀! 다 모으면 잔치하자!','냠냠, 글자가 맛있다!','너랑 노는 게 제일 좋아!']}];
 const CLOTHES=['🎩','🧢','👒','🎀','🧣','👓','🎒','🧤','🦺','⛑️','🕶️','👑'];
 const VEHICLES=['🛴','🚲','🛹','🛶','🚗','🚌','⛵','🎈','🚁','🚂','🛸','🚀'];
 const MEDALS=['🥉','🥈','🥇','🏅','🎖️','🏆','💎','🔮','🌟','🪄','🎇','👑'];
@@ -448,7 +453,7 @@ const MISSIONS={
  s9m1:{name:'그림책 1',eng:'story',gi:'📖'},s9m2:{name:'그림책 2',eng:'story',gi:'📖'},s9m3:{name:'그림책 3',eng:'story',gi:'📖'},s9m4:{name:'아주 긴 그림책',eng:'story',gi:'📖'}};
 const ALL_MIDS=Object.keys(MISSIONS);
 const MISSION_TOTAL=ALL_MIDS.length; /* 38 */
-const DAILY_LIMIT=9999; /* 테스트 기간: 하루 제한 해제 (추후 3으로 복구) */
+const DAILY_LIMIT=3;
 function thresh(k,ti){return ti===0?(k-1)*9:3+(k-1)*9;} /* 등차수열 d=9 */
 
 /* ---------------- STORAGE / STATE ---------------- */
@@ -520,14 +525,23 @@ function pickVoice(){
   const pref=ko.find(v=>/(Yuna|유나|Nari|나리|natural|Neural|Premium|Enhanced|Google)/i.test(v.name));
   return pref||ko[0];
 }
-function speak(t){
+function utter(t,pitch,rate,cancel){
   if(!state.sound)return;
   try{const u=new SpeechSynthesisUtterance(t);
     const v=pickVoice();
     if(v){u.voice=v;u.lang=v.lang;}else{u.lang='ko-KR';}
-    u.rate=0.9;u.pitch=1.1;
-    speechSynthesis.cancel();speechSynthesis.speak(u);}catch(e){}
+    u.pitch=pitch;u.rate=rate;
+    if(cancel)speechSynthesis.cancel();
+    speechSynthesis.speak(u);}catch(e){}
 }
+/* 낱말·글자 발음: 왜곡 없이 또렷하게 */
+function speak(t){utter(t,1.0,0.88,true);}
+/* 캐릭터 수다: 친구마다 다른 음색. cancel=false면 앞말 끝나고 이어 말함 */
+function speakAs(fi,t,cancel){
+  const f=FRIENDS[fi]||FRIENDS[0];const vp=f.vp||{p:1.1,r:1.0};
+  utter(t,vp.p,vp.r,cancel!==false);
+}
+function gfi(){return hatchedCount()-1;}
 let AC=null;
 function tone(f,d,delay,type,g){
   if(!state.sound)return;
@@ -568,6 +582,29 @@ const CHO=['ㄱ','ㄲ','ㄴ','ㄷ','ㄸ','ㄹ','ㅁ','ㅂ','ㅃ','ㅅ','ㅆ','�
 const JUNG=['ㅏ','ㅐ','ㅑ','ㅒ','ㅓ','ㅔ','ㅕ','ㅖ','ㅗ','ㅘ','ㅙ','ㅚ','ㅛ','ㅜ','ㅝ','ㅞ','ㅟ','ㅠ','ㅡ','ㅢ','ㅣ'];
 function decompose(ch){const c=ch.charCodeAt(0)-0xAC00;if(c<0||c>11171)return null;
   return{cho:CHO[Math.floor(c/588)],jung:JUNG[Math.floor((c%588)/28)],jong:c%28};}
+/* ---------------- 그림 글자 (자모 형상화, 1~3단계) ---------------- */
+const PICTO={"애벌레":{w:244,h:"'레'의 ㄹ이 애벌레야! 꼬불꼬불 ㄹ!",s:"<text x=\"40\" y=\"72\" font-size=\"64\" text-anchor=\"middle\" style=\"font-family:'Pretendard','Apple SD Gothic Neo',sans-serif;font-weight:800;\" fill=\"#3A3049\">애</text><text x=\"112\" y=\"72\" font-size=\"64\" text-anchor=\"middle\" style=\"font-family:'Pretendard','Apple SD Gothic Neo',sans-serif;font-weight:800;\" fill=\"#3A3049\">벌</text><path d=\"M156 26 L198 26 L198 48 L156 48 L156 72 L198 72\" fill=\"none\" stroke=\"#8BC34A\" stroke-width=\"12\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/><circle cx=\"156\" cy=\"26\" r=\"8\" fill=\"#7CB342\"/><circle cx=\"153\" cy=\"24\" r=\"2.2\" fill=\"#2A241E\"/><line x1=\"152\" y1=\"19\" x2=\"149\" y2=\"13\" stroke=\"#5A9E2F\" stroke-width=\"2\" stroke-linecap=\"round\"/><line x1=\"159\" y1=\"19\" x2=\"162\" y2=\"13\" stroke=\"#5A9E2F\" stroke-width=\"2\" stroke-linecap=\"round\"/><circle cx=\"176\" cy=\"26\" r=\"2.6\" fill=\"#DCEDC8\"/><circle cx=\"198\" cy=\"37\" r=\"2.6\" fill=\"#DCEDC8\"/><circle cx=\"176\" cy=\"48\" r=\"2.6\" fill=\"#DCEDC8\"/><circle cx=\"156\" cy=\"60\" r=\"2.6\" fill=\"#DCEDC8\"/><circle cx=\"176\" cy=\"72\" r=\"2.6\" fill=\"#DCEDC8\"/><text x=\"222\" y=\"72\" font-size=\"60\" text-anchor=\"middle\" style=\"font-family:'Pretendard','Apple SD Gothic Neo',sans-serif;font-weight:800;\" fill=\"#3A3049\">ㅔ</text>"},
+ "오리":{w:168,h:"'오'의 ㅇ이 동글동글 오리야!",s:"<circle cx=\"44\" cy=\"40\" r=\"25\" fill=\"#FFE08A\" stroke=\"#E0A800\" stroke-width=\"8\"/><circle cx=\"36\" cy=\"33\" r=\"3.5\" fill=\"#3A3049\"/><path d=\"M68 38 q12 2 11 8 q-7 3 -12 0 z\" fill=\"#F59E0B\"/><text x=\"44\" y=\"92\" font-size=\"30\" text-anchor=\"middle\" style=\"font-family:'Pretendard','Apple SD Gothic Neo',sans-serif;font-weight:800;\" fill=\"#3A3049\">ㅗ</text><text x=\"128\" y=\"72\" font-size=\"64\" text-anchor=\"middle\" style=\"font-family:'Pretendard','Apple SD Gothic Neo',sans-serif;font-weight:800;\" fill=\"#3A3049\">리</text>"},
+ "나비":{w:200,h:"'비'의 ㅂ 위에 나비 더듬이가 있어!",s:"<text x=\"40\" y=\"72\" font-size=\"64\" text-anchor=\"middle\" style=\"font-family:'Pretendard','Apple SD Gothic Neo',sans-serif;font-weight:800;\" fill=\"#3A3049\">나</text><g stroke=\"#B57EDC\" stroke-width=\"9\" stroke-linecap=\"round\" fill=\"none\"><line x1=\"102\" y1=\"24\" x2=\"102\" y2=\"74\"/><line x1=\"138\" y1=\"24\" x2=\"138\" y2=\"74\"/><line x1=\"102\" y1=\"46\" x2=\"138\" y2=\"46\"/><line x1=\"102\" y1=\"70\" x2=\"138\" y2=\"70\"/></g><path d=\"M102 24 q-6 -8 -12 -6\" fill=\"none\" stroke=\"#8E5FBF\" stroke-width=\"3\" stroke-linecap=\"round\"/><path d=\"M138 24 q6 -8 12 -6\" fill=\"none\" stroke=\"#8E5FBF\" stroke-width=\"3\" stroke-linecap=\"round\"/><circle cx=\"90\" cy=\"17\" r=\"3\" fill=\"#8E5FBF\"/><circle cx=\"150\" cy=\"17\" r=\"3\" fill=\"#8E5FBF\"/><circle cx=\"112\" cy=\"58\" r=\"3.5\" fill=\"#F8A5C2\"/><circle cx=\"128\" cy=\"58\" r=\"3.5\" fill=\"#F8A5C2\"/><circle cx=\"120\" cy=\"34\" r=\"3.5\" fill=\"#F8A5C2\"/><text x=\"166\" y=\"72\" font-size=\"60\" text-anchor=\"middle\" style=\"font-family:'Pretendard','Apple SD Gothic Neo',sans-serif;font-weight:800;\" fill=\"#3A3049\">ㅣ</text>"},
+ "거미":{w:176,h:"'미'의 ㅁ이 거미 몸이야! 네모 몸!",s:"<text x=\"40\" y=\"72\" font-size=\"64\" text-anchor=\"middle\" style=\"font-family:'Pretendard','Apple SD Gothic Neo',sans-serif;font-weight:800;\" fill=\"#3A3049\">거</text><line x1=\"96\" y1=\"34\" x2=\"80\" y2=\"28\" stroke=\"#5A4A3A\" stroke-width=\"3.5\" stroke-linecap=\"round\"/><line x1=\"96\" y1=\"47\" x2=\"80\" y2=\"43\" stroke=\"#5A4A3A\" stroke-width=\"3.5\" stroke-linecap=\"round\"/><line x1=\"96\" y1=\"60\" x2=\"80\" y2=\"58\" stroke=\"#5A4A3A\" stroke-width=\"3.5\" stroke-linecap=\"round\"/><line x1=\"140\" y1=\"34\" x2=\"156\" y2=\"28\" stroke=\"#5A4A3A\" stroke-width=\"3.5\" stroke-linecap=\"round\"/><line x1=\"140\" y1=\"47\" x2=\"156\" y2=\"43\" stroke=\"#5A4A3A\" stroke-width=\"3.5\" stroke-linecap=\"round\"/><line x1=\"140\" y1=\"60\" x2=\"156\" y2=\"58\" stroke=\"#5A4A3A\" stroke-width=\"3.5\" stroke-linecap=\"round\"/><rect x=\"96\" y=\"26\" width=\"44\" height=\"46\" rx=\"6\" fill=\"#6B5B4B\" stroke=\"#3E332A\" stroke-width=\"8\"/><circle cx=\"111\" cy=\"42\" r=\"4\" fill=\"#fff\"/><circle cx=\"125\" cy=\"42\" r=\"4\" fill=\"#fff\"/><circle cx=\"111\" cy=\"42\" r=\"1.8\" fill=\"#2A241E\"/><circle cx=\"125\" cy=\"42\" r=\"1.8\" fill=\"#2A241E\"/><path d=\"M111 58 q7 5 14 0\" fill=\"none\" stroke=\"#fff\" stroke-width=\"2.5\" stroke-linecap=\"round\"/><text x=\"162\" y=\"72\" font-size=\"60\" text-anchor=\"middle\" style=\"font-family:'Pretendard','Apple SD Gothic Neo',sans-serif;font-weight:800;\" fill=\"#3A3049\">ㅣ</text>"},
+ "달팽이":{w:240,h:"'이'의 ㅇ이 달팽이 집이야!",s:"<text x=\"40\" y=\"72\" font-size=\"64\" text-anchor=\"middle\" style=\"font-family:'Pretendard','Apple SD Gothic Neo',sans-serif;font-weight:800;\" fill=\"#3A3049\">달</text><text x=\"112\" y=\"72\" font-size=\"64\" text-anchor=\"middle\" style=\"font-family:'Pretendard','Apple SD Gothic Neo',sans-serif;font-weight:800;\" fill=\"#3A3049\">팽</text><circle cx=\"178\" cy=\"46\" r=\"22\" fill=\"#FDEBD0\" stroke=\"#C98A5E\" stroke-width=\"8\"/><path d=\"M178 46 a5 5 0 1 1 6 5 a10 10 0 1 1 -14 -6\" fill=\"none\" stroke=\"#B0754A\" stroke-width=\"3\"/><text x=\"216\" y=\"72\" font-size=\"60\" text-anchor=\"middle\" style=\"font-family:'Pretendard','Apple SD Gothic Neo',sans-serif;font-weight:800;\" fill=\"#3A3049\">ㅣ</text>"},
+ "공룡알":{w:252,h:"'알'의 ㅇ이 공룡알이야!",s:"<text x=\"40\" y=\"72\" font-size=\"64\" text-anchor=\"middle\" style=\"font-family:'Pretendard','Apple SD Gothic Neo',sans-serif;font-weight:800;\" fill=\"#3A3049\">공</text><text x=\"112\" y=\"72\" font-size=\"64\" text-anchor=\"middle\" style=\"font-family:'Pretendard','Apple SD Gothic Neo',sans-serif;font-weight:800;\" fill=\"#3A3049\">룡</text><circle cx=\"170\" cy=\"38\" r=\"19\" fill=\"#FDF0D5\" stroke=\"#D9B26A\" stroke-width=\"7\"/><path d=\"M160 36 l5 5 l5 -7 l5 8 l5 -5\" fill=\"none\" stroke=\"#C79A4A\" stroke-width=\"2.5\"/><text x=\"208\" y=\"54\" font-size=\"46\" text-anchor=\"middle\" style=\"font-family:'Pretendard','Apple SD Gothic Neo',sans-serif;font-weight:800;\" fill=\"#3A3049\">ㅏ</text><text x=\"188\" y=\"96\" font-size=\"38\" text-anchor=\"middle\" style=\"font-family:'Pretendard','Apple SD Gothic Neo',sans-serif;font-weight:800;\" fill=\"#3A3049\">ㄹ</text>"},
+ "사자":{w:176,h:"'사'의 ㅅ이 사자 다리야! 갈기도 있어!",s:"<line x1=\"28\" y1=\"26\" x2=\"18\" y2=\"26\" stroke=\"#E8A23D\" stroke-width=\"4\" stroke-linecap=\"round\"/><line x1=\"30\" y1=\"18\" x2=\"21\" y2=\"13\" stroke=\"#E8A23D\" stroke-width=\"4\" stroke-linecap=\"round\"/><line x1=\"36\" y1=\"12\" x2=\"31\" y2=\"3\" stroke=\"#E8A23D\" stroke-width=\"4\" stroke-linecap=\"round\"/><line x1=\"44\" y1=\"10\" x2=\"44\" y2=\"0\" stroke=\"#E8A23D\" stroke-width=\"4\" stroke-linecap=\"round\"/><line x1=\"52\" y1=\"12\" x2=\"57\" y2=\"3\" stroke=\"#E8A23D\" stroke-width=\"4\" stroke-linecap=\"round\"/><line x1=\"58\" y1=\"18\" x2=\"67\" y2=\"13\" stroke=\"#E8A23D\" stroke-width=\"4\" stroke-linecap=\"round\"/><line x1=\"60\" y1=\"26\" x2=\"70\" y2=\"26\" stroke=\"#E8A23D\" stroke-width=\"4\" stroke-linecap=\"round\"/><path d=\"M44 26 L24 74 M44 26 L64 74\" fill=\"none\" stroke=\"#E8952F\" stroke-width=\"12\" stroke-linecap=\"round\"/><circle cx=\"38\" cy=\"40\" r=\"2.8\" fill=\"#3A3049\"/><circle cx=\"50\" cy=\"40\" r=\"2.8\" fill=\"#3A3049\"/><text x=\"84\" y=\"72\" font-size=\"56\" text-anchor=\"middle\" style=\"font-family:'Pretendard','Apple SD Gothic Neo',sans-serif;font-weight:800;\" fill=\"#3A3049\">ㅏ</text><text x=\"146\" y=\"72\" font-size=\"64\" text-anchor=\"middle\" style=\"font-family:'Pretendard','Apple SD Gothic Neo',sans-serif;font-weight:800;\" fill=\"#3A3049\">자</text>"},
+ "나무":{w:170,h:"'무'의 ㅁ이 나무 기둥이야! 위에 잎!",s:"<text x=\"40\" y=\"72\" font-size=\"64\" text-anchor=\"middle\" style=\"font-family:'Pretendard','Apple SD Gothic Neo',sans-serif;font-weight:800;\" fill=\"#3A3049\">나</text><circle cx=\"106\" cy=\"20\" r=\"9\" fill=\"#7CB342\"/><circle cx=\"120\" cy=\"15\" r=\"10\" fill=\"#8BC34A\"/><circle cx=\"134\" cy=\"20\" r=\"9\" fill=\"#7CB342\"/><rect x=\"100\" y=\"26\" width=\"40\" height=\"40\" rx=\"5\" fill=\"#C99B6C\" stroke=\"#8B5E3C\" stroke-width=\"8\"/><path d=\"M110 36 q4 8 0 16 M128 34 q-4 9 0 18\" fill=\"none\" stroke=\"#8B5E3C\" stroke-width=\"2.5\"/><text x=\"120\" y=\"92\" font-size=\"30\" text-anchor=\"middle\" style=\"font-family:'Pretendard','Apple SD Gothic Neo',sans-serif;font-weight:800;\" fill=\"#3A3049\">ㅜ</text>"},
+ "버스":{w:176,h:"'버'의 ㅂ이 버스야! 바퀴도 있어!",s:"<g stroke=\"#E0A020\" stroke-width=\"9\" stroke-linecap=\"round\" fill=\"none\"><line x1=\"20\" y1=\"20\" x2=\"20\" y2=\"72\"/><line x1=\"58\" y1=\"20\" x2=\"58\" y2=\"72\"/><line x1=\"20\" y1=\"42\" x2=\"58\" y2=\"42\"/><line x1=\"20\" y1=\"70\" x2=\"58\" y2=\"70\"/></g><rect x=\"27\" y=\"50\" width=\"10\" height=\"9\" rx=\"2\" fill=\"#BDE3FF\"/><rect x=\"41\" y=\"50\" width=\"10\" height=\"9\" rx=\"2\" fill=\"#BDE3FF\"/><circle cx=\"27\" cy=\"80\" r=\"6\" fill=\"#4A4A4A\"/><circle cx=\"51\" cy=\"80\" r=\"6\" fill=\"#4A4A4A\"/><text x=\"84\" y=\"72\" font-size=\"56\" text-anchor=\"middle\" style=\"font-family:'Pretendard','Apple SD Gothic Neo',sans-serif;font-weight:800;\" fill=\"#3A3049\">ㅓ</text><text x=\"146\" y=\"72\" font-size=\"64\" text-anchor=\"middle\" style=\"font-family:'Pretendard','Apple SD Gothic Neo',sans-serif;font-weight:800;\" fill=\"#3A3049\">스</text>"},
+ "자전거":{w:244,h:"'자'의 ㅈ이 자전거야! 바퀴 두 개!",s:"<path d=\"M16 28 L64 28 M40 28 L22 66 M40 28 L58 66\" fill=\"none\" stroke=\"#E8734A\" stroke-width=\"10\" stroke-linecap=\"round\"/><circle cx=\"22\" cy=\"70\" r=\"9\" fill=\"none\" stroke=\"#4A4A4A\" stroke-width=\"4\"/><circle cx=\"58\" cy=\"70\" r=\"9\" fill=\"none\" stroke=\"#4A4A4A\" stroke-width=\"4\"/><text x=\"86\" y=\"72\" font-size=\"56\" text-anchor=\"middle\" style=\"font-family:'Pretendard','Apple SD Gothic Neo',sans-serif;font-weight:800;\" fill=\"#3A3049\">ㅏ</text><text x=\"150\" y=\"72\" font-size=\"64\" text-anchor=\"middle\" style=\"font-family:'Pretendard','Apple SD Gothic Neo',sans-serif;font-weight:800;\" fill=\"#3A3049\">전</text><text x=\"214\" y=\"72\" font-size=\"64\" text-anchor=\"middle\" style=\"font-family:'Pretendard','Apple SD Gothic Neo',sans-serif;font-weight:800;\" fill=\"#3A3049\">거</text>"}};
+function pictoStageOK(){const g=state.game;if(!g)return false;return parseInt(g.mid.slice(1))<=3;}
+function pictoHTML(word,mini){
+  const p=PICTO[word];if(!p||!pictoStageOK())return null;
+  return `<svg class="picto${mini?' mini':''}" viewBox="0 0 ${p.w} 100" data-pw="${word}" xmlns="http://www.w3.org/2000/svg">${p.s}</svg>`;
+}
+function bindPicto(){
+  document.querySelectorAll('.qbox .picto').forEach(el=>{
+    el.onclick=ev=>{ev.stopPropagation();sfxClick();
+      const w=el.dataset.pw;el.classList.remove('gig');void el.getBoundingClientRect();el.classList.add('gig');
+      speak(w);speakAs(gfi(),PICTO[w].h,false);};
+  });
+}
 function eggHTML(fi,pct,mini){
   const f=FRIENDS[fi];
   const cls='egg'+(mini?' mini':'')+(pct>=80?' c2':(pct>=50?' c1':''));
@@ -890,7 +927,7 @@ function rHome(){
   const fc=hatchedCount();const guideF=FRIENDS[fc-1];
   const asleep=d.used>=DAILY_LIMIT;
   const hr=new Date().getHours();
-  const greet=asleep?'오늘은 그만 자야 해... 내일 또 만나자! 💤'
+  const greet=asleep?'새 모험은 내일! 그런데 복습은 지금도 할 수 있어! 💤'
     :(hr<12?'좋은 아침! 오늘도 모험 가자!'
       :(hr<18?'어서 와! 오늘은 어디로 모험 갈까?'
         :'반짝반짝 저녁이야! 자기 전에 살짝 모험 갈까?'));
@@ -898,6 +935,7 @@ function rHome(){
    <div class="top">
      <button class="iconbtn" id="backP">🏠</button>
      <span class="chip">⭐ ${cprog().stars}</span>
+     <span class="chip">🎯 오늘 ${Math.max(0,DAILY_LIMIT-d.used)}/${DAILY_LIMIT}</span>
      <span class="chip" id="themeChip" style="cursor:pointer;">${T.emoji}</span>
      <span class="spacer"></span>
      <button class="iconbtn" id="sndBtn">${state.sound?'🔊':'🔇'}</button>
@@ -938,8 +976,8 @@ function rHome(){
     $('#gBubble').innerHTML=`<b>${guideF.n}</b>: ${line}`;speak(line);sfxClick();};
   const ne=$('#nextEgg');
   if(ne)ne.onclick=()=>{const egg=ne.querySelector('.egg');egg.classList.remove('tap');void egg.offsetWidth;egg.classList.add('tap');
-    sfxClick();speak('톡톡! 별을 모으면 곧 만날 수 있어!');};
-  if(!state.greeted){state.greeted=true;speak(guideF.n+'! '+greet);}
+    sfxClick();speakAs(gfi(),'톡톡! 별을 모으면 곧 만날 수 있어!',true);};
+  if(!state.greeted){state.greeted=true;speakAs(gfi(),greet,true);}
 }
 /* ---------------- THEMES ---------------- */
 function rThemes(){
@@ -971,8 +1009,13 @@ function rStage(){
   app.innerHTML=`
    <div class="top"><button class="iconbtn" id="bk">←</button>
      <span class="chip">${st.emoji} ${st.name}</span><span class="spacer"></span>
+     <span class="chip">🎯 ${Math.max(0,DAILY_LIMIT-daily().used)}</span>
      <span class="chip">⭐ ${cp.stars}</span></div>
-   <div class="guide"><div class="face" id="gFace">${gf.e}</div>
+   <div class="guide">
+     <div class="facewrap">
+       <div class="face" id="gFace">${gf.e}</div>
+       ${nextEggWidget(true)}
+     </div>
      <div class="bubble" id="gBubble"><b>${gf.n}</b>: ${st.name}에 온 걸 환영해! ${st.desc}!</div></div>
    <div id="mlist"></div>`;
   const ml=$('#mlist');
@@ -994,7 +1037,7 @@ function rStage(){
     <div class="sd">${chDone?'도전 성공! 다시 도전해도 좋아':(mDone?'성공하면 다음 나라가 열려!':'이 나라 미션을 모두 깨면 도전 등장!')}</div></div>
     <span class="stagebadge">${chDone?'🏆':(mDone?'✨':'🔒')}</span>`;
   cd.onclick=()=>{
-    if(!mDone){sfxBad();speak('미션을 모두 깨면 도전할 수 있어!');return;}
+    if(!mDone){sfxBad();speakAs(gfi(),'미션을 모두 깨면 도전할 수 있어!',true);return;}
     sfxClick();startChallenge(st.id);};
   ml.appendChild(cd);
   $('#bk').onclick=()=>{sfxClick();go('home');};
@@ -1009,12 +1052,12 @@ function rSleep(){
    <div class="reward">
      <div class="big" style="position:relative;">${f.e}<span class="zzz" style="font-size:34px;top:-6px;right:-30px;">💤</span></div>
      <h1>오늘은 여기까지!</h1>
-     <div class="sub" style="font-size:19px;">${f.n}: "오늘 모험 ${DAILY_LIMIT}개를 다 했어!<br>
-     이제 나는 자야 해... 내일 또 만나자!"</div>
+     <div class="sub" style="font-size:19px;">${f.n}: "오늘 새 모험 ${DAILY_LIMIT}개를 다 했어!<br>
+     나는 이제 잘래... 그런데 <b>복습은 더 할 수 있어!</b> 🌟"</div>
      <div class="note" style="text-align:left;">💡 완료한 미션의 <b>복습</b>은 지금도 할 수 있어요. 새 미션은 내일 다시 열려요!</div>
      <button class="btn mt" id="bk">알았어, 잘 자! 👋</button>
    </div>`;
-  speak(f.n+'가 말해요. 오늘 모험을 다 했어! 내일 또 만나자!');
+  speakAs(fc-1,'오늘 새 모험을 다 했어! 나는 이제 잘래. 그런데 복습은 더 할 수 있어! 별도 받을 수 있다구! 내일 또 만나자!',true);
   $('#bk').onclick=()=>{sfxClick();go('home');};
 }
 
@@ -1025,6 +1068,11 @@ function startMission(mid){
   if(isFirst&&daily().used>=DAILY_LIMIT){go('sleep');return;}
   const qs=genQuestions(mid,state.theme);
   if(!qs.length){speak('이 놀이는 준비 중이야!');return;}
+  /* 6단계(글자 공장)부터: 글자가 있는 보기에서 그림 단서 제거 → 순수 글자 읽기 */
+  const stageNum=parseInt(mid.slice(1));
+  if(stageNum>=6)qs.forEach(q=>{
+    if(q.type==='choice')q.opts.forEach(o=>{if(o.text&&o.emoji)delete o.emoji;});
+  });
   state.game={mid,qs,i:0,lock:false,sen:null,storyPage:0,streak:0,flashDone:false,flashTimer:null,meetTaps:0,isFirst};
   go('game');
 }
@@ -1052,30 +1100,40 @@ function rGame(){
   return (E[M.eng]||rPop)(q);
 }
 function optInner(o,hg){
+  const pic=o.text?pictoHTML(o.text,true):null;
   return (o.emoji?`<span class="em">${o.emoji}</span>`:'')+
-    (o.text?`<span class="tx"${hg?' style="font-size:36px;"':''}>${o.text}</span>`:'')+
+    (pic?pic:(o.text?`<span class="tx"${hg?' style="font-size:36px;"':''}>${o.text}</span>`:''))+
     (o.sub?`<span class="nm">${o.sub}</span>`:'');
 }
 function drifts(ems){return ems.map((e,i)=>`<span class="drift" style="top:${10+i*26}%;animation-delay:${i*2.4}s;animation-duration:${8+i*3}s;">${e}</span>`).join('');}
 function promptBox(q){
+  const pic=q.prompt.text?pictoHTML(q.prompt.text,false):null;
   return `<div class="qbox" style="padding:12px;">
     ${q.prompt.big?`<div class="qbig" style="font-size:44px;">${q.prompt.big}</div>`:''}
-    ${q.prompt.text?`<div class="qtx">${q.prompt.text}</div>`:''}
+    ${pic?pic:(q.prompt.text?`<div class="qtx">${q.prompt.text}</div>`:'')}
     <button class="speaker" id="spk">🔊</button></div>`;
 }
-function bindSpk(q){const b=$('#spk');if(b)b.onclick=()=>speak(q.speak);speak(q.speak);}
+function bindSpk(q){const b=$('#spk');if(b)b.onclick=()=>speak(q.speak);bindPicto();speak(q.speak);}
 function miniOK(q){
   const g=state.game;if(g.lock)return false;g.lock=true;g.streak++;sfxGood();
-  if(g.streak>=3&&g.streak%3===0){confetti();speak((q.say||randPraise())+' 연속 '+g.streak+'개! 불꽃이다!');}
-  else speak(q.say||randPraise());
+  const combo=(g.streak>=3&&g.streak%3===0);
+  if(combo)confetti();
+  const praise=randPraise()+(combo?' 연속 '+g.streak+'개! 불꽃이다!':'');
+  if(q.say){speak(q.say);speakAs(gfi(),praise,false);}  /* 낱말 또렷하게 → 캐릭터 칭찬 이어서 */
+  else speakAs(gfi(),praise,true);
+  g.comboWait=combo;
   return true;
 }
 function miniNO(){
   const g=state.game;if(g.lock)return false;
-  g.streak=0;sfxBad();speak(randOops());return true;
+  g.streak=0;sfxBad();speakAs(gfi(),randOops(),true);return true;
 }
-function miniNext(ms){setTimeout(()=>{const g=state.game;if(!g)return;
-  g.i++;g.lock=false;g.flashDone=false;g.meetTaps=0;render();},ms);}
+function miniNext(ms){
+  const g=state.game;
+  const extra=800+(g&&g.comboWait?1100:0);
+  if(g)g.comboWait=false;
+  setTimeout(()=>{const gg=state.game;if(!gg)return;
+    gg.i++;gg.lock=false;gg.flashDone=false;gg.meetTaps=0;render();},ms+extra);}
 /* ---- 🎈 풍선 팡팡 ---- */
 const BCOL=['#FFC7D2','#BDE3FF','#FFE9A8','#C9F2CF'];
 function rPop(q){
@@ -1269,10 +1327,10 @@ function checkTrain(q){
   const g=state.game;const ok=g.sen.picked.join(' ')===q.words.join(' ');
   render();
   const row=$('#slot');
-  if(ok){sfxGood();confetti();speak('칙칙폭폭! '+q.words.join(' ')+'! 기차 출발!');
+  if(ok){sfxGood();confetti();speak(q.words.join(' '));speakAs(gfi(),'칙칙폭폭! 기차 출발!',false);
     setTimeout(()=>{if(row)row.classList.add('depart');},350);
-    setTimeout(()=>{g.sen=null;g.i++;render();},2100);}
-  else{sfxBad();speak('음, 기차 칸 순서가 좀 이상한걸? 다시 연결해 보자!');
+    setTimeout(()=>{g.sen=null;g.i++;render();},2600);}
+  else{sfxBad();speakAs(gfi(),'음, 기차 칸 순서가 좀 이상한걸? 다시 연결해 보자!',true);
     if(row)row.classList.add('tumble');
     setTimeout(()=>{g.sen={pool:shuffle(q.words.slice()),picked:[]};render();},1300);}
 }
@@ -1314,8 +1372,8 @@ function rStory(q){
       d.innerHTML=`<div class="bbody" style="background:${BCOL[i%4]};">${optInner(o,false)}</div><div class="str"></div>`;
       d.onclick=()=>{
         if(i===q2.answer){const g2=state.game;if(g2.lock)return;g2.lock=true;
-          sfxGood();speak('딩동댕! '+randPraise());d.classList.add('popped');
-          setTimeout(()=>{g2.storyPage=0;g2.lock=false;g2.i++;render();},950);}
+          sfxGood();speakAs(gfi(),'딩동댕! '+randPraise(),true);d.classList.add('popped');
+          setTimeout(()=>{g2.storyPage=0;g2.lock=false;g2.i++;render();},1900);}
         else{sfxBad();speak(randOops());
           d.classList.remove('boing');void d.offsetWidth;d.classList.add('boing');}
       };
