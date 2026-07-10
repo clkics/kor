@@ -50,6 +50,11 @@ body{font-family:'Jua','BM Jua','Apple SD Gothic Neo','Malgun Gothic',sans-serif
 .btn:disabled{opacity:.45;pointer-events:none;}
 
 .guide{display:flex;align-items:flex-end;gap:12px;margin:8px 0 16px;position:relative;z-index:2;}
+.facewrap{display:flex;flex-direction:column;align-items:center;gap:2px;flex:0 0 auto;}
+.nextegg{text-align:center;cursor:pointer;margin-top:2px;}
+.nextegg .eggpct{font-size:11px;color:var(--ink-soft);font-weight:700;margin-top:1px;}
+.gameegg{display:inline-flex;flex-direction:column;align-items:center;transform:scale(.72);transform-origin:right center;}
+.gameegg .eggpct{font-size:10px;color:var(--ink-soft);font-weight:700;}
 .guide .face{font-size:62px;line-height:1;animation:floaty 3s ease-in-out infinite;cursor:pointer;
   filter:drop-shadow(0 6px 0 rgba(58,48,73,.12));position:relative;}
 @keyframes floaty{0%,100%{transform:translateY(0);}50%{transform:translateY(-9px);}}
@@ -205,6 +210,99 @@ h2{font-size:23px;margin-bottom:10px;}
 .minibar{height:10px;background:#E7EFF5;border-radius:99px;overflow:hidden;margin:3px 0 7px;}
 .minibar i{display:block;height:100%;background:var(--mint);border-radius:99px;}
 .mslabel{display:inline-block;background:#EFE9FF;color:var(--grape-dk);border-radius:99px;padding:4px 12px;font-size:14px;margin:4px 0;}
+
+/* ===== 미니게임 공통 ===== */
+.scene{position:relative;min-height:340px;border-radius:24px;overflow:hidden;margin-top:10px;padding:14px 10px;}
+.scene .drift{position:absolute;font-size:26px;opacity:.5;animation:driftMove 9s linear infinite;pointer-events:none;}
+@keyframes driftMove{0%{transform:translateX(-40px);}100%{transform:translateX(420px);}}
+.hintline{text-align:center;font-size:15px;color:var(--ink-soft);margin:6px 0 2px;}
+/* ===== 풍선 팡팡 ===== */
+.sky{background:linear-gradient(#CDEBFF,#EAF7FF);}
+.balloonwrap{display:flex;flex-wrap:wrap;justify-content:center;gap:6px;position:relative;z-index:1;}
+.balloon{width:132px;text-align:center;cursor:pointer;animation:bSway 3s ease-in-out infinite alternate;}
+.balloon:nth-child(2){animation-duration:3.6s;animation-delay:.4s;}
+.balloon:nth-child(3){animation-duration:2.7s;animation-delay:.8s;}
+.balloon:nth-child(4){animation-duration:3.3s;animation-delay:.2s;}
+@keyframes bSway{0%{transform:translateY(0) rotate(-2deg);}100%{transform:translateY(-14px) rotate(2deg);}}
+.bbody{width:112px;height:128px;margin:0 auto;border-radius:50% 50% 48% 48%;display:flex;flex-direction:column;align-items:center;justify-content:center;box-shadow:inset -8px -10px 0 rgba(0,0,0,.06),0 4px 10px rgba(0,0,0,.10);border:3px solid rgba(255,255,255,.7);}
+.balloon .str{width:2px;height:34px;background:#B9A88F;margin:0 auto;border-radius:2px;}
+.balloon .em{font-size:34px;line-height:1;}.balloon .tx{font-size:26px;font-weight:800;}.balloon .nm{font-size:13px;opacity:.75;}
+.balloon.popped{animation:bPop .45s ease forwards;}
+@keyframes bPop{0%{transform:scale(1);}30%{transform:scale(1.25);}100%{transform:scale(.05);opacity:0;}}
+.balloon.boing{animation:bBoing .4s ease;}
+@keyframes bBoing{0%,100%{transform:scale(1);}35%{transform:scale(.86) rotate(-5deg);}70%{transform:scale(1.08) rotate(4deg);}}
+/* ===== 두더지 콩콩 ===== */
+.fieldbg{background:linear-gradient(#DFF3C8,#F4FBE7);}
+.holes{display:grid;grid-template-columns:1fr 1fr;gap:12px;position:relative;z-index:1;}
+.hole{position:relative;height:150px;overflow:hidden;border-radius:18px;}
+.hole::after{content:'';position:absolute;bottom:6px;left:12%;width:76%;height:26px;background:#8B6B4A;border-radius:50%;opacity:.85;}
+.mole{position:absolute;left:50%;bottom:8px;transform:translateX(-50%);width:104px;padding:8px 4px 16px;background:#C99B6C;border:3px solid #A97C4F;border-radius:52px 52px 18px 18px;text-align:center;cursor:pointer;animation:peek 3s ease-in-out infinite;z-index:1;}
+.hole:nth-child(2) .mole{animation-duration:3.5s;animation-delay:.5s;}
+.hole:nth-child(3) .mole{animation-duration:2.7s;animation-delay:1s;}
+.hole:nth-child(4) .mole{animation-duration:3.2s;animation-delay:.3s;}
+@keyframes peek{0%,100%{transform:translateX(-50%) translateY(64%);}25%,75%{transform:translateX(-50%) translateY(4%);}}
+.mole .mf{font-size:22px;}.mole .em{font-size:30px;display:block;}.mole .tx{font-size:25px;font-weight:800;display:block;}.mole .nm{font-size:12px;opacity:.8;display:block;}
+.mole.bonk{animation:bonkA .55s ease forwards;}
+@keyframes bonkA{0%{transform:translateX(-50%) translateY(4%);}30%{transform:translateX(-50%) translateY(2%) scale(1.15,.75);}100%{transform:translateX(-50%) translateY(10%) scale(1);}}
+.mole.duck{animation:duckA .5s ease;}
+@keyframes duckA{0%,100%{}50%{transform:translateX(-50%) translateY(85%);}}
+/* ===== 신나는 낚시 ===== */
+.seabg{background:linear-gradient(#BDE7FF 0%,#8FD0F5 30%,#5FB4E8 100%);}
+.fishrow{position:relative;z-index:1;display:flex;flex-direction:column;gap:14px;padding-top:6px;}
+.fishy{display:flex;align-items:center;gap:6px;width:max-content;cursor:pointer;animation:swim 3.4s ease-in-out infinite alternate;}
+.fishy:nth-child(2){animation-duration:4.1s;animation-delay:.5s;align-self:flex-end;flex-direction:row-reverse;}
+.fishy:nth-child(2) .ffish{transform:scaleX(-1);}
+.fishy:nth-child(3){animation-duration:3s;animation-delay:.9s;align-self:center;}
+.fishy:nth-child(4){animation-duration:3.8s;animation-delay:.2s;}
+@keyframes swim{0%{transform:translateX(0) translateY(0);}50%{transform:translateX(40px) translateY(-6px);}100%{transform:translateX(90px) translateY(4px);}}
+.ffish{font-size:44px;line-height:1;}
+.fbub{background:rgba(255,255,255,.92);border:3px solid #fff;border-radius:16px;padding:6px 12px;box-shadow:0 3px 8px rgba(0,0,0,.12);text-align:center;}
+.fbub .em{font-size:26px;}.fbub .tx{font-size:24px;font-weight:800;}.fbub .nm{font-size:12px;opacity:.75;display:block;}
+.fishy.hooked{animation:hookA .8s ease forwards;}
+@keyframes hookA{0%{}30%{transform:translateY(-30px) rotate(-14deg);}100%{transform:translateY(-240px) rotate(-20deg);opacity:0;}}
+.fishy.splash{animation:splashA .45s ease;}
+@keyframes splashA{0%,100%{}50%{transform:translateY(12px) rotate(8deg);}}
+/* ===== 보물 상자 쾅쾅 ===== */
+.cavebg{background:linear-gradient(#E8DCC8,#F7F0E1);}
+.chests{display:grid;grid-template-columns:1fr 1fr;gap:14px;position:relative;z-index:1;}
+.chest{background:#fff;border:3px solid var(--line);border-radius:20px;padding:14px 8px;text-align:center;cursor:pointer;box-shadow:0 4px 0 var(--line);}
+.chest .box{font-size:52px;display:block;transition:transform .15s;}
+.chest .em{font-size:30px;}.chest .tx{font-size:26px;font-weight:800;display:block;}.chest .nm{font-size:12px;opacity:.75;display:block;}
+.chest.knock .box{animation:knockA .3s ease;}
+@keyframes knockA{0%,100%{transform:rotate(0);}30%{transform:rotate(-8deg) scale(1.08);}70%{transform:rotate(6deg) scale(1.05);}}
+.chest.open{background:var(--mint-soft);border-color:var(--mint);}
+.chest.open .box{animation:openA .6s ease;}
+@keyframes openA{0%{transform:scale(1);}40%{transform:scale(1.35) rotate(-6deg);}100%{transform:scale(1.15);}}
+.chest.puff{animation:puffA .45s ease;}
+@keyframes puffA{0%,100%{transform:translateX(0);}25%{transform:translateX(-7px);}60%{transform:translateX(6px);}}
+/* ===== 냠냠 먹이 주기 ===== */
+.mealbg{background:linear-gradient(#FFEFD9,#FFF9EE);}
+.friendbig{font-size:84px;text-align:center;line-height:1.1;animation:hop 1.6s ease-in-out infinite;position:relative;z-index:1;}
+@keyframes hop{0%,100%{transform:translateY(0);}50%{transform:translateY(-8px);}}
+.friendbig.chomp{animation:chompA .7s ease;}
+@keyframes chompA{0%{transform:scale(1);}25%{transform:scale(1.25,.8);}50%{transform:scale(.9,1.15);}75%{transform:scale(1.1,.95);}100%{transform:scale(1);}}
+.friendbig.yuck{animation:yuckA .5s ease;}
+@keyframes yuckA{0%,100%{transform:rotate(0);}25%{transform:rotate(-10deg);}75%{transform:rotate(10deg);}}
+.foods{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;position:relative;z-index:1;margin-top:14px;}
+.foods.two{grid-template-columns:1fr 1fr;}
+.food{background:#fff;border:3px solid var(--line);border-radius:18px;padding:12px 6px;text-align:center;cursor:pointer;box-shadow:0 4px 0 var(--line);transition:transform .6s ease,opacity .6s ease;}
+.food .em{font-size:34px;display:block;}.food .tx{font-size:24px;font-weight:800;display:block;}.food .nm{font-size:12px;opacity:.75;display:block;}
+.food.eaten{transform:translateY(-190px) scale(.25);opacity:0;}
+.food.nope{animation:puffA .45s ease;}
+/* ===== 반짝 기억 놀이 ===== */
+.starbg{background:linear-gradient(#EDE4FF,#FAF6FF);}
+.bigletter{font-size:100px;font-weight:800;text-align:center;cursor:pointer;line-height:1.2;user-select:none;position:relative;z-index:1;animation:hop 1.8s ease-in-out infinite;}
+.bigletter.gig{animation:gigA .5s ease;}
+@keyframes gigA{0%,100%{transform:rotate(0) scale(1);}25%{transform:rotate(-8deg) scale(1.2);}75%{transform:rotate(8deg) scale(1.15);}}
+/* ===== 칙칙폭폭 기차 ===== */
+.railbg{background:linear-gradient(#DFF0FF,#F3FAFF);}
+.trainrow{display:flex;align-items:center;gap:6px;min-height:86px;padding:8px;background:rgba(255,255,255,.7);border-radius:16px;position:relative;z-index:1;overflow-x:auto;transition:transform 1.8s ease-in,opacity 1.8s;}
+.trainrow.depart{transform:translateX(-130%);opacity:.2;}
+.loco{font-size:48px;flex:0 0 auto;}
+.tcar{background:var(--sun-soft);border:3px solid var(--sun);border-radius:12px;padding:8px 12px;font-size:22px;font-weight:800;flex:0 0 auto;cursor:pointer;}
+.trainrow.tumble .tcar{animation:puffA .5s ease;}
+.rail{height:6px;background:repeating-linear-gradient(90deg,#B9A88F 0 22px,transparent 22px 34px);border-radius:3px;margin-top:2px;position:relative;z-index:1;}
+
 </style>
 </head>
 <body>
@@ -214,7 +312,7 @@ h2{font-size:23px;margin-bottom:10px;}
 <div id="app"></div>
 <script>
 /* ============================================================
-   한글 친구들 v2 — 나라별 독립 진도 · 알 부화 · 말하기 도전
+   한글 친구들 v4 — 목소리 선택·다음알 상시노출(쥐 옆)·낱말나라 난이도↓·하루제한 임시해제
    ============================================================ */
 /* ---------------- DATA: themes ---------------- */
 const THEMES={
@@ -339,18 +437,18 @@ const STAGES=[
  {id:8,name:'문장 나라',emoji:'📝',guide:7,desc:'낱말로 문장 만들기',missions:['s8m1','s8m2','s8m3','s8m4','s8m5']},
  {id:9,name:'이야기 나라',emoji:'📖',guide:8,desc:'혼자서 책을 읽어요',missions:['s9m1','s9m2','s9m3','s9m4']}];
 const MISSIONS={
- s1m1:{name:'그림 찾기'},s1m2:{name:'낱말 찾기'},
- s2m1:{name:'박수 놀이'},s2m2:{name:'더 긴 낱말'},s2m3:{name:'글자 수 짝꿍'},
- s3m1:{name:'숨은 글자 찾기'},s3m2:{name:'첫 글자 찾기'},s3m3:{name:'끝 글자 찾기'},s3m4:{name:'다른 낱말 찾기'},
- s4m1:{name:'모음 소리 찾기'},s4m2:{name:'글자 소리 맞히기'},s4m3:{name:'모음 짝꿍'},s4m4:{name:'모음 기억하기'},s4m5:{name:'낱말 속 모음'},
- s5m1:{name:'소리 글자 찾기'},s5m2:{name:'다른 글자 찾기'},s5m3:{name:'첫소리 찾기'},s5m4:{name:'글자 기억하기'},s5m5:{name:'빨리빨리 찾기'},
- s6m1:{name:'글자 조립'},s6m2:{name:'글자 분해'},s6m3:{name:'모음이 빠졌어요'},s6m4:{name:'자음이 빠졌어요'},s6m5:{name:'낱말 완성 공장'},
- s7m1:{name:'받침 붙이기'},s7m2:{name:'받침 있다 없다'},s7m3:{name:'빠진 받침 찾기'},s7m4:{name:'소리 듣고 찾기'},s7m5:{name:'받침 낱말 찾기'},
- s8m1:{name:'문장 만들기'},s8m2:{name:'문장 보고 그림 찾기'},s8m3:{name:'빈칸 채우기'},s8m4:{name:'바른 문장 찾기'},s8m5:{name:'누가 그랬을까'},
- s9m1:{name:'이야기 하나'},s9m2:{name:'이야기 둘'},s9m3:{name:'이야기 셋'},s9m4:{name:'기다란 이야기'}};
+ s1m1:{name:'소리 듣고 냠냠',eng:'feed',gi:'🍽️'},s1m2:{name:'박수 풍선 팡팡',eng:'pop',gi:'🎈'},
+ s2m1:{name:'박수 풍선',eng:'pop',gi:'🎈'},s2m2:{name:'배고픈 친구',eng:'feed',gi:'🍽️'},s2m3:{name:'글자 수 두더지',eng:'mole',gi:'🔨'},
+ s3m1:{name:'숨은 글자 두더지',eng:'mole',gi:'🔨'},s3m2:{name:'첫 글자 낚시',eng:'fish',gi:'🎣'},s3m3:{name:'끝 글자 풍선',eng:'pop',gi:'🎈'},s3m4:{name:'다른 낱말 냠냠',eng:'feed',gi:'🍽️'},
+ s4m1:{name:'모음 풍선 팡팡',eng:'pop',gi:'🎈'},s4m2:{name:'소리 두더지',eng:'mole',gi:'🔨'},s4m3:{name:'모음 낚시',eng:'fish',gi:'🎣'},s4m4:{name:'반짝 기억 놀이',eng:'meet',gi:'✨'},s4m5:{name:'모음 냠냠',eng:'feed',gi:'🍽️'},
+ s5m1:{name:'가나다 두더지',eng:'mole',gi:'🔨'},s5m2:{name:'소리 풍선',eng:'pop',gi:'🎈'},s5m3:{name:'글자 낚시',eng:'fish',gi:'🎣'},s5m4:{name:'반짝 기억 놀이',eng:'meet',gi:'✨'},s5m5:{name:'소리 보물 상자',eng:'crack',gi:'🎁'},
+ s6m1:{name:'조립 풍선',eng:'pop',gi:'🎈'},s6m2:{name:'글자 두더지',eng:'mole',gi:'🔨'},s6m3:{name:'글자 보물 상자',eng:'crack',gi:'🎁'},s6m4:{name:'조립 낚시',eng:'fish',gi:'🎣'},s6m5:{name:'글자 냠냠',eng:'feed',gi:'🍽️'},
+ s7m1:{name:'받침 보물 상자',eng:'crack',gi:'🎁'},s7m2:{name:'받침 두더지',eng:'mole',gi:'🔨'},s7m3:{name:'받침 풍선',eng:'pop',gi:'🎈'},s7m4:{name:'받침 낚시',eng:'fish',gi:'🎣'},s7m5:{name:'받침 냠냠',eng:'feed',gi:'🍽️'},
+ s8m1:{name:'칙칙폭폭 문장 기차',eng:'train',gi:'🚂'},s8m2:{name:'문장 보물 상자',eng:'crack',gi:'🎁'},s8m3:{name:'문장 풍선',eng:'pop',gi:'🎈'},s8m4:{name:'문장 두더지',eng:'mole',gi:'🔨'},s8m5:{name:'문장 낚시',eng:'fish',gi:'🎣'},
+ s9m1:{name:'그림책 1',eng:'story',gi:'📖'},s9m2:{name:'그림책 2',eng:'story',gi:'📖'},s9m3:{name:'그림책 3',eng:'story',gi:'📖'},s9m4:{name:'아주 긴 그림책',eng:'story',gi:'📖'}};
 const ALL_MIDS=Object.keys(MISSIONS);
 const MISSION_TOTAL=ALL_MIDS.length; /* 38 */
-const DAILY_LIMIT=3;
+const DAILY_LIMIT=9999; /* 테스트 기간: 하루 제한 해제 (추후 3으로 복구) */
 function thresh(k,ti){return ti===0?(k-1)*9:3+(k-1)*9;} /* 등차수열 d=9 */
 
 /* ---------------- STORAGE / STATE ---------------- */
@@ -400,16 +498,34 @@ function unlockedInTrack(ti){
 }
 function hatchedCount(){return prog().trackOrder.length>0?Math.max(1,unlockedInTrack(0)):1;}
 function stageUnlocked(st,c){
-  if(st.id===1)return true;
-  return !!cprog(c).challenges[st.id-1];
+  return true; /* 테스트 기간: 전체 단계 열림 (추후 복구: st.id===1?true:!!cprog(c).challenges[st.id-1]) */
 }
 function stageMissionsDone(st,c){return st.missions.every(m=>cprog(c).done.includes(m));}
 function countryPct(c){return Math.round(cprog(c).done.length/MISSION_TOTAL*100);}
 
 /* ---------------- AUDIO / FX ---------------- */
+let VOICES=[];
+function loadVoices(){
+  try{VOICES=speechSynthesis.getVoices()||[];}catch(e){VOICES=[];}
+}
+function koVoices(){
+  return VOICES.filter(v=>/ko(-|_)?KR|Korean|한국/i.test(v.lang+' '+v.name));
+}
+function pickVoice(){
+  const want=DB.voiceURI;
+  if(want){const v=VOICES.find(v=>v.voiceURI===want);if(v)return v;}
+  const ko=koVoices();
+  if(!ko.length)return null;
+  /* 이름에 자연스러운 음성 키워드가 있으면 우선 (기기별로 다름) */
+  const pref=ko.find(v=>/(Yuna|유나|Nari|나리|natural|Neural|Premium|Enhanced|Google)/i.test(v.name));
+  return pref||ko[0];
+}
 function speak(t){
   if(!state.sound)return;
-  try{const u=new SpeechSynthesisUtterance(t);u.lang='ko-KR';u.rate=0.85;u.pitch=1.15;
+  try{const u=new SpeechSynthesisUtterance(t);
+    const v=pickVoice();
+    if(v){u.voice=v;u.lang=v.lang;}else{u.lang='ko-KR';}
+    u.rate=0.9;u.pitch=1.1;
     speechSynthesis.cancel();speechSynthesis.speak(u);}catch(e){}
 }
 let AC=null;
@@ -446,7 +562,8 @@ function pick(a,n){return shuffle(a).slice(0,n);}
 function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;');}
 function go(sc){state.screen=sc;render();}
 function today(){return new Date().toISOString().slice(0,10);}
-function randPraise(){const P=['참 잘했어요!','우와, 최고야!','정말 대단해!','멋지다 멋져!','짝짝짝, 훌륭해!'];return P[Math.floor(Math.random()*P.length)];}
+function randPraise(){const P=['참 잘했어요!','우와, 최고야!','정말 대단해!','멋지다 멋져!','짝짝짝, 훌륭해!','딩동댕동!','대박! 천재인가?','야호, 성공이야!','반짝반짝 빛난다!','슈퍼 스타!'];return P[Math.floor(Math.random()*P.length)];}
+function randOops(){const P=['앗, 요건 아닌가 봐!','으잉? 다시 한번!','아깝다! 또 해보자!','요게 아니네~ 다시 찾아보자!','살짝 아쉬워! 한 번 더!'];return P[Math.floor(Math.random()*P.length)];}
 const CHO=['ㄱ','ㄲ','ㄴ','ㄷ','ㄸ','ㄹ','ㅁ','ㅂ','ㅃ','ㅅ','ㅆ','ㅇ','ㅈ','ㅉ','ㅊ','ㅋ','ㅌ','ㅍ','ㅎ'];
 const JUNG=['ㅏ','ㅐ','ㅑ','ㅒ','ㅓ','ㅔ','ㅕ','ㅖ','ㅗ','ㅘ','ㅙ','ㅚ','ㅛ','ㅜ','ㅝ','ㅞ','ㅟ','ㅠ','ㅡ','ㅢ','ㅣ'];
 function decompose(ch){const c=ch.charCodeAt(0)-0xAC00;if(c<0||c>11171)return null;
@@ -456,6 +573,19 @@ function eggHTML(fi,pct,mini){
   const cls='egg'+(mini?' mini':'')+(pct>=80?' c2':(pct>=50?' c1':''));
   return '<div class="'+cls+'"><div class="pat" style="background:'+f.pat+';background-color:transparent;"></div><div class="crk"></div></div>';
 }
+/* 다음 알 미리보기: 별이 없어도 항상 표시 (0%). 홈·게임 공용. */
+function nextEggWidget(mini){
+  const p=prog();const fc=hatchedCount();const nextIdx=fc<12?fc:null;
+  if(nextIdx===null)return '';
+  const firstC=p.trackOrder[0];
+  const s=firstC?cprog(firstC).stars:0;
+  const need=thresh(nextIdx+1,0);
+  const pct=need<=0?100:Math.min(99,Math.floor(s/need*100));
+  const left=Math.max(0,need-s);
+  return `<div class="nextegg" id="nextEgg" title="다음 친구의 알">
+    ${eggHTML(nextIdx,pct,mini!==false)}
+    <div class="eggpct">${left>0?('⭐'+left):'곧 부화!'}</div></div>`;
+}
 
 /* ---------------- QUESTION GENERATORS (38 missions) ---------------- */
 function genQuestions(mid,tk){
@@ -464,12 +594,15 @@ function genQuestions(mid,tk){
   /* --- stage 1 --- */
   if(mid==='s1m1')return pick(W,5).map(w=>{
     const opts=shuffle([w,...other(w,3)]);
-    return{type:'choice',prompt:{big:w.w},speak:w.w+'! '+w.w+' 그림을 찾아 줘!',
+    return{type:'choice',prompt:{big:'🔊'},speak:w.w+'! '+w.w+'는 어디 있을까?',
       opts:opts.map(o=>({emoji:o.e})),answer:opts.indexOf(w),say:w.w};});
   if(mid==='s1m2')return pick(W,5).map(w=>{
-    const opts=shuffle([w,...other(w,2)]);
-    return{type:'choice',prompt:{big:w.e},speak:'이 그림의 이름을 찾아 줘!',
-      opts:opts.map(o=>({text:o.w})),answer:opts.indexOf(w),say:w.w};});
+    const set=new Set([w.w.length]);while(set.size<3)set.add(1+Math.floor(Math.random()*4));
+    const opts=shuffle([...set]);
+    return{type:'choice',prompt:{big:w.e,text:w.w},
+      speak:w.w+'! 몇 번 박수 칠까? '+w.w.split('').join(', '),
+      opts:opts.map(n=>({text:'👏'.repeat(n),sub:n+'번'})),
+      answer:opts.indexOf(w.w.length),say:w.w+'는 '+w.w.length+'글자!'};});
   /* --- stage 2 --- */
   if(mid==='s2m1')return pick(W.filter(w=>w.w.length<=3),5).map(w=>{
     const set=new Set([w.w.length]);while(set.size<3)set.add(1+Math.floor(Math.random()*4));
@@ -756,14 +889,6 @@ function rHome(){
   const p=prog();const T=THEMES[state.theme];const d=daily();
   const fc=hatchedCount();const guideF=FRIENDS[fc-1];
   const asleep=d.used>=DAILY_LIMIT;
-  const nextIdx=fc<12?fc:null;
-  let nextEggHtml='';
-  if(nextIdx!==null&&p.trackOrder.length>0){
-    const s=cprog(p.trackOrder[0]).stars;const need=thresh(nextIdx+1,0);
-    const pct=need<=0?100:Math.min(99,Math.floor(s/need*100));
-    nextEggHtml=`<div id="nextEgg" style="text-align:center;cursor:pointer;">${eggHTML(nextIdx,pct,true)}
-      <div style="font-size:11px;color:var(--ink-soft);">${pct}%</div></div>`;
-  }
   const hr=new Date().getHours();
   const greet=asleep?'오늘은 그만 자야 해... 내일 또 만나자! 💤'
     :(hr<12?'좋은 아침! 오늘도 모험 가자!'
@@ -773,16 +898,17 @@ function rHome(){
    <div class="top">
      <button class="iconbtn" id="backP">🏠</button>
      <span class="chip">⭐ ${cprog().stars}</span>
-     <span class="chip">🎯 오늘 ${Math.max(0,DAILY_LIMIT-d.used)}/${DAILY_LIMIT}</span>
      <span class="chip" id="themeChip" style="cursor:pointer;">${T.emoji}</span>
      <span class="spacer"></span>
      <button class="iconbtn" id="sndBtn">${state.sound?'🔊':'🔇'}</button>
      <button class="iconbtn" id="colBtn">📒</button>
    </div>
    <div class="guide">
-     <div class="face${asleep?' sleep':''}" id="gFace">${asleep?'😴':guideF.e}${asleep?'<span class="zzz">💤</span>':''}</div>
+     <div class="facewrap">
+       <div class="face${asleep?' sleep':''}" id="gFace">${asleep?'😴':guideF.e}${asleep?'<span class="zzz">💤</span>':''}</div>
+       ${nextEggWidget(true)}
+     </div>
      <div class="bubble" id="gBubble"><b>${guideF.n}</b>: ${greet}</div>
-     ${nextEggHtml}
    </div>
    <div id="smap"></div>`;
   const map=$('#smap');
@@ -839,13 +965,12 @@ function rThemes(){
 }
 /* ---------------- STAGE ---------------- */
 function rStage(){
-  const st=state.stage;const cp=cprog();const gf=FRIENDS[st.guide];
+  const st=state.stage;const cp=cprog();const gf=FRIENDS[hatchedCount()-1];
   const mDone=stageMissionsDone(st,state.theme);
   const chDone=!!cp.challenges[st.id];
   app.innerHTML=`
    <div class="top"><button class="iconbtn" id="bk">←</button>
      <span class="chip">${st.emoji} ${st.name}</span><span class="spacer"></span>
-     <span class="chip">🎯 ${Math.max(0,DAILY_LIMIT-daily().used)}</span>
      <span class="chip">⭐ ${cp.stars}</span></div>
    <div class="guide"><div class="face" id="gFace">${gf.e}</div>
      <div class="bubble" id="gBubble"><b>${gf.n}</b>: ${st.name}에 온 걸 환영해! ${st.desc}!</div></div>
@@ -855,9 +980,9 @@ function rStage(){
     const M=MISSIONS[mid];const done=cp.done.includes(mid);
     const rv=cp.reviews[mid]||0;
     const d=document.createElement('div');d.className='stage';
-    d.innerHTML=`<span class="se">${done?'🌟':'📌'}</span>
+    d.innerHTML=`<span class="se">${done?'🌟':M.gi}</span>
       <div class="fill"><div class="sn">${M.name}</div>
-      <div class="sd">${done?('복습 '+rv+'/3 · 복습해도 ⭐ 하나!'):'처음 성공 ⭐⭐⭐ (오늘 모험 1개 사용)'}</div></div>
+      <div class="sd">${done?('복습 '+rv+'/3 · 복습해도 ⭐ 하나!'):'처음 성공하면 ⭐⭐⭐!'}</div></div>
       <span class="stagebadge">${done?'🔁':'▶️'}</span>`;
     d.onclick=()=>{sfxClick();startMission(mid);};
     ml.appendChild(d);
@@ -900,14 +1025,17 @@ function startMission(mid){
   if(isFirst&&daily().used>=DAILY_LIMIT){go('sleep');return;}
   const qs=genQuestions(mid,state.theme);
   if(!qs.length){speak('이 놀이는 준비 중이야!');return;}
-  state.game={mid,qs,i:0,lock:false,sen:null,storyPage:0,streak:0,flashDone:false,flashTimer:null,isFirst};
+  state.game={mid,qs,i:0,lock:false,sen:null,storyPage:0,streak:0,flashDone:false,flashTimer:null,meetTaps:0,isFirst};
   go('game');
 }
 function gameHeader(){
   const g=state.game;
   const dots=g.qs.map((_,i)=>`<span class="dot${i<=g.i?' on':''}"></span>`).join('');
   return`<div class="top"><button class="iconbtn" id="quitBtn">←</button>
-    <span class="chip">📌 ${MISSIONS[g.mid].name}</span></div>
+    <span class="chip">📌 ${MISSIONS[g.mid].name}</span>
+    <span class="spacer"></span>
+    <span class="chip">⭐ ${cprog().stars}</span>
+    <div class="gameegg">${nextEggWidget(true)}</div></div>
     <div class="dots">${dots}</div>`;
 }
 function bindQuit(){$('#quitBtn').onclick=()=>{sfxClick();
@@ -916,105 +1044,239 @@ function bindQuit(){$('#quitBtn').onclick=()=>{sfxClick();
 function rGame(){
   const g=state.game;const q=g.qs[g.i];
   if(!q)return finishMission();
-  if(q.type==='choice')return rChoice(q);
-  if(q.type==='flash')return rFlash(q);
-  if(q.type==='sentence')return rSentence(q);
+  const M=MISSIONS[g.mid];
+  if(q.type==='sentence')return rTrain(q);
   if(q.type==='story')return rStory(q);
+  if(q.type==='flash')return rMeet(q);
+  const E={feed:rFeed,pop:rPop,mole:rMole,fish:rFish,crack:rCrack};
+  return (E[M.eng]||rPop)(q);
 }
-function optHTML(o,hg){
+function optInner(o,hg){
   return (o.emoji?`<span class="em">${o.emoji}</span>`:'')+
-    (o.text?`<span class="tx"${hg?' style="font-size:42px;"':''}>${o.text}</span>`:'')+
+    (o.text?`<span class="tx"${hg?' style="font-size:36px;"':''}>${o.text}</span>`:'')+
     (o.sub?`<span class="nm">${o.sub}</span>`:'');
 }
-function rChoice(q){
-  app.innerHTML=gameHeader()+`
-   <div class="qbox">
-     ${q.prompt.big?`<div class="qbig">${q.prompt.big}</div>`:''}
-     ${q.prompt.text?`<div class="qtx">${q.prompt.text}</div>`:''}
-     <button class="speaker" id="spk">🔊</button>
-   </div>
-   <div class="${q.opts.length===2?'grid2':(q.opts.length===3?'grid3':'grid2')}" id="og"></div>`;
+function drifts(ems){return ems.map((e,i)=>`<span class="drift" style="top:${10+i*26}%;animation-delay:${i*2.4}s;animation-duration:${8+i*3}s;">${e}</span>`).join('');}
+function promptBox(q){
+  return `<div class="qbox" style="padding:12px;">
+    ${q.prompt.big?`<div class="qbig" style="font-size:44px;">${q.prompt.big}</div>`:''}
+    ${q.prompt.text?`<div class="qtx">${q.prompt.text}</div>`:''}
+    <button class="speaker" id="spk">🔊</button></div>`;
+}
+function bindSpk(q){const b=$('#spk');if(b)b.onclick=()=>speak(q.speak);speak(q.speak);}
+function miniOK(q){
+  const g=state.game;if(g.lock)return false;g.lock=true;g.streak++;sfxGood();
+  if(g.streak>=3&&g.streak%3===0){confetti();speak((q.say||randPraise())+' 연속 '+g.streak+'개! 불꽃이다!');}
+  else speak(q.say||randPraise());
+  return true;
+}
+function miniNO(){
+  const g=state.game;if(g.lock)return false;
+  g.streak=0;sfxBad();speak(randOops());return true;
+}
+function miniNext(ms){setTimeout(()=>{const g=state.game;if(!g)return;
+  g.i++;g.lock=false;g.flashDone=false;g.meetTaps=0;render();},ms);}
+/* ---- 🎈 풍선 팡팡 ---- */
+const BCOL=['#FFC7D2','#BDE3FF','#FFE9A8','#C9F2CF'];
+function rPop(q){
+  app.innerHTML=gameHeader()+promptBox(q)+`
+   <div class="scene sky">${drifts(['☁️','☁️','🕊️'])}
+     <div class="hintline">정답 풍선을 팡! 터뜨려 봐 🎈</div>
+     <div class="balloonwrap" id="og"></div></div>`;
   bindQuit();
   const og=$('#og');
   q.opts.forEach((o,i)=>{
-    const d=document.createElement('div');d.className='opt';
-    d.innerHTML=optHTML(o,q.hg);
-    d.onclick=()=>answerChoice(d,i===q.answer,q);
+    const d=document.createElement('div');d.className='balloon';
+    d.innerHTML=`<div class="bbody" style="background:${BCOL[i%4]};">${optInner(o,q.hg)}</div><div class="str"></div>`;
+    d.onclick=()=>{
+      if(i===q.answer){if(!miniOK(q))return;d.classList.add('popped');miniNext(950);}
+      else{if(!miniNO())return;d.classList.remove('boing');void d.offsetWidth;d.classList.add('boing');}
+    };
     og.appendChild(d);
   });
-  $('#spk').onclick=()=>speak(q.speak);
-  speak(q.speak);
+  bindSpk(q);
 }
-function rFlash(q){
+/* ---- 🔨 두더지 콩콩 ---- */
+function rMole(q){
+  app.innerHTML=gameHeader()+promptBox(q)+`
+   <div class="scene fieldbg">${drifts(['🦋','🌼'])}
+     <div class="hintline">정답 두더지를 콩! 잡아 봐 🔨</div>
+     <div class="holes" id="og"></div></div>`;
+  bindQuit();
+  const og=$('#og');
+  q.opts.forEach((o,i)=>{
+    const h=document.createElement('div');h.className='hole';
+    const m=document.createElement('div');m.className='mole';
+    m.innerHTML=`<span class="mf">🐹</span>${optInner(o,q.hg)}`;
+    m.onclick=()=>{
+      if(i===q.answer){if(!miniOK(q))return;
+        m.style.animationPlayState='paused';m.classList.add('bonk');
+        m.querySelector('.mf').textContent='💫';miniNext(950);}
+      else{if(!miniNO())return;m.classList.remove('duck');void m.offsetWidth;m.classList.add('duck');}
+    };
+    h.appendChild(m);og.appendChild(h);
+  });
+  bindSpk(q);
+}
+/* ---- 🎣 신나는 낚시 ---- */
+const FISH=['🐠','🐟','🐡','🦈'];
+function rFish(q){
+  app.innerHTML=gameHeader()+promptBox(q)+`
+   <div class="scene seabg">${drifts(['🫧','🫧','🌊'])}
+     <div class="hintline" style="color:#fff;text-shadow:0 1px 2px rgba(0,0,0,.2);">정답 물고기를 콕! 낚아 봐 🎣</div>
+     <div class="fishrow" id="og"></div></div>`;
+  bindQuit();
+  const og=$('#og');
+  q.opts.forEach((o,i)=>{
+    const f=document.createElement('div');f.className='fishy';
+    f.innerHTML=`<span class="ffish">${FISH[i%4]}</span><div class="fbub">${optInner(o,q.hg)}</div>`;
+    f.onclick=()=>{
+      if(i===q.answer){if(!miniOK(q))return;
+        f.style.animation='none';void f.offsetWidth;f.classList.add('hooked');miniNext(1000);}
+      else{if(!miniNO())return;f.classList.remove('splash');void f.offsetWidth;f.classList.add('splash');}
+    };
+    og.appendChild(f);
+  });
+  bindSpk(q);
+}
+/* ---- 🎁 보물 상자 쾅쾅 ---- */
+function rCrack(q){
+  app.innerHTML=gameHeader()+promptBox(q)+`
+   <div class="scene cavebg">${drifts(['✨','✨'])}
+     <div class="hintline">정답 상자를 세 번 두드리면 열려! 🎁</div>
+     <div class="chests" id="og"></div></div>`;
+  bindQuit();
+  const og=$('#og');
+  q.opts.forEach((o,i)=>{
+    const c=document.createElement('div');c.className='chest';c.dataset.k='0';
+    c.innerHTML=`<span class="box">🎁</span>${optInner(o,q.hg)}`;
+    c.onclick=()=>{
+      const g=state.game;if(g.lock)return;
+      if(i===q.answer){
+        const k=(+c.dataset.k)+1;c.dataset.k=k;
+        c.classList.remove('knock');void c.offsetWidth;c.classList.add('knock');sfxClick();
+        if(k>=3){if(!miniOK(q))return;
+          c.querySelector('.box').textContent=(q.opts[i].emoji||'🌟');
+          c.classList.add('open');miniNext(1100);}
+      }else{if(!miniNO())return;c.classList.remove('puff');void c.offsetWidth;c.classList.add('puff');}
+    };
+    og.appendChild(c);
+  });
+  bindSpk(q);
+}
+/* ---- 🍽️ 냠냠 먹이 주기 ---- */
+function rFeed(q){
+  const gf=FRIENDS[hatchedCount()-1];
+  app.innerHTML=gameHeader()+promptBox(q)+`
+   <div class="scene mealbg">${drifts(['🍃','🍃'])}
+     <div class="friendbig" id="fb">${gf.e}</div>
+     <div class="hintline">${gf.n}가 배고파! 정답을 골라 냠냠 🍽️</div>
+     <div class="foods${q.opts.length===2?' two':''}" id="og"></div></div>`;
+  bindQuit();
+  const og=$('#og');const fb=$('#fb');
+  q.opts.forEach((o,i)=>{
+    const d=document.createElement('div');d.className='food';
+    d.innerHTML=optInner(o,q.hg);
+    d.onclick=()=>{
+      if(i===q.answer){if(!miniOK(q))return;
+        d.classList.add('eaten');
+        setTimeout(()=>{fb.classList.add('chomp');},450);
+        miniNext(1250);}
+      else{if(!miniNO())return;
+        d.classList.remove('nope');void d.offsetWidth;d.classList.add('nope');
+        fb.classList.remove('yuck');void fb.offsetWidth;fb.classList.add('yuck');}
+    };
+    og.appendChild(d);
+  });
+  bindSpk(q);
+}
+/* ---- ✨ 반짝 기억 놀이 (flash) ---- */
+function rMeet(q){
   const g=state.game;
   if(!g.flashDone){
     app.innerHTML=gameHeader()+`
-     <div class="qbox"><div class="qtx">✨ 잘 봐! 곧 사라져요!</div>
-       <div class="qbig" style="font-size:90px;">${q.flash}</div></div>`;
-    bindQuit();speak(q.speak);
-    g.flashTimer=setTimeout(()=>{g.flashDone=true;render();},2200);
+     <div class="scene starbg">${drifts(['⭐','✨','🌟'])}
+       <div class="hintline">글자를 콕콕 눌러 봐! 소리가 나요 ✨</div>
+       <div class="bigletter" id="bl">${q.flash}</div>
+       <div style="text-align:center;margin-top:14px;position:relative;z-index:1;">
+         <button class="btn mint" id="hideBtn" style="visibility:${(g.meetTaps||0)>=2?'visible':'hidden'};">숨바꼭질 시작! 🙈</button>
+       </div></div>`;
+    bindQuit();
+    const bl=$('#bl');const COLS=['var(--berry)','var(--mint-deep)','var(--sky-deep)','var(--sun-deep)'];
+    bl.onclick=()=>{
+      g.meetTaps=(g.meetTaps||0)+1;sfxClick();speak(q.speak);
+      bl.style.color=COLS[g.meetTaps%4];
+      bl.classList.remove('gig');void bl.offsetWidth;bl.classList.add('gig');
+      if(g.meetTaps>=2)$('#hideBtn').style.visibility='visible';
+    };
+    $('#hideBtn').onclick=()=>{sfxClick();g.flashDone=true;render();};
+    speak(q.speak+'! 글자를 눌러 봐!');
     return;
   }
   app.innerHTML=gameHeader()+`
-   <div class="qbox"><div class="qbig">❓</div>
+   <div class="qbox" style="padding:12px;"><div class="qbig">🙈</div>
      <div class="qtx">${q.prompt.text}</div></div>
-   <div class="grid3" id="og"></div>`;
+   <div class="scene fieldbg">
+     <div class="hintline">방금 만난 글자를 콩! 잡아 봐</div>
+     <div class="holes" id="og"></div></div>`;
   bindQuit();
   const og=$('#og');
   q.opts.forEach((o,i)=>{
-    const d=document.createElement('div');d.className='opt';
-    d.innerHTML=optHTML(o,q.hg);
-    d.onclick=()=>answerChoice(d,i===q.answer,q);
-    og.appendChild(d);
+    const h=document.createElement('div');h.className='hole';
+    const m=document.createElement('div');m.className='mole';
+    m.innerHTML=`<span class="mf">🐹</span>${optInner(o,q.hg)}`;
+    m.onclick=()=>{
+      if(i===q.answer){if(!miniOK(q))return;
+        m.style.animationPlayState='paused';m.classList.add('bonk');
+        m.querySelector('.mf').textContent='💫';miniNext(950);}
+      else{if(!miniNO())return;m.classList.remove('duck');void m.offsetWidth;m.classList.add('duck');}
+    };
+    h.appendChild(m);og.appendChild(h);
   });
-  speak('방금 본 글자는 어느 것일까?');
+  speak('방금 만난 글자는 어디 숨었을까?');
 }
-function answerChoice(el,ok,q){
-  const g=state.game;if(g.lock)return;
-  if(ok){
-    g.lock=true;g.streak++;el.classList.add('good');sfxGood();
-    if(g.streak>=3&&g.streak%3===0){confetti();speak((q.say||'')+' 연속 '+g.streak+'개! 불꽃이다!');}
-    else speak(q.say||randPraise());
-    setTimeout(()=>{g.i++;g.lock=false;g.flashDone=false;render();},1100);
-  }else{
-    g.streak=0;el.classList.add('bad');sfxBad();speak('아니야, 다시 한번!');
-    setTimeout(()=>el.classList.remove('bad'),450);
-  }
-}
-function rSentence(q){
+/* ---- 🚂 칙칙폭폭 문장 기차 ---- */
+function rTrain(q){
   const g=state.game;
   if(!g.sen)g.sen={pool:shuffle(q.words.slice()),picked:[]};
   const sen=g.sen;
   app.innerHTML=gameHeader()+`
-   <div class="qbox"><div class="qbig">${q.emoji}</div>
-     <div class="qtx">낱말을 눌러 문장을 만들어 줘!</div>
+   <div class="qbox" style="padding:12px;"><div class="qbig" style="font-size:44px;">${q.emoji}</div>
+     <div class="qtx">낱말 기차를 순서대로 연결해 줘!</div>
      <button class="speaker" id="spk">🔊</button></div>
-   <div class="senslot" id="slot">${sen.picked.length?'':'<span style="color:#B9CBD8;font-size:17px">여기에 문장이 생겨요</span>'}</div>
-   <div class="chippool" id="pool"></div>`;
+   <div class="scene railbg">${drifts(['☁️','🌳'])}
+     <div class="trainrow" id="slot"><span class="loco">🚂</span></div>
+     <div class="rail"></div>
+     <div class="hintline">낱말을 누르면 기차 칸이 돼요</div>
+     <div class="chippool" id="pool" style="position:relative;z-index:1;"></div></div>`;
   bindQuit();
   const slot=$('#slot'),pool=$('#pool');
   sen.picked.forEach((w,i)=>{
-    const c=document.createElement('span');c.className='wchip inslot';c.textContent=w;
+    const c=document.createElement('span');c.className='tcar';c.textContent=w;
     c.onclick=()=>{sfxClick();sen.pool.push(w);sen.picked.splice(i,1);render();};
     slot.appendChild(c);
   });
   sen.pool.forEach((w,i)=>{
     const c=document.createElement('span');c.className='wchip';c.textContent=w;
     c.onclick=()=>{sfxClick();speak(w);sen.picked.push(w);sen.pool.splice(i,1);
-      if(sen.pool.length===0)checkSentence(q);else render();};
+      if(sen.pool.length===0)checkTrain(q);else render();};
     pool.appendChild(c);
   });
   $('#spk').onclick=()=>speak(q.words.join(' '));
   if(sen.picked.length===0&&sen.pool.length===q.words.length)speak(q.speak);
 }
-function checkSentence(q){
+function checkTrain(q){
   const g=state.game;const ok=g.sen.picked.join(' ')===q.words.join(' ');
   render();
-  if(ok){sfxGood();speak(q.words.join(' ')+'! '+randPraise());confetti();
-    setTimeout(()=>{g.sen=null;g.i++;render();},1600);}
-  else{sfxBad();speak('음, 순서가 좀 이상한걸? 다시 만들어 보자!');
-    setTimeout(()=>{g.sen={pool:shuffle(q.words.slice()),picked:[]};render();},1200);}
+  const row=$('#slot');
+  if(ok){sfxGood();confetti();speak('칙칙폭폭! '+q.words.join(' ')+'! 기차 출발!');
+    setTimeout(()=>{if(row)row.classList.add('depart');},350);
+    setTimeout(()=>{g.sen=null;g.i++;render();},2100);}
+  else{sfxBad();speak('음, 기차 칸 순서가 좀 이상한걸? 다시 연결해 보자!');
+    if(row)row.classList.add('tumble');
+    setTimeout(()=>{g.sen={pool:shuffle(q.words.slice()),picked:[]};render();},1300);}
 }
+/* ---- 📖 그림책 (그림 콕콕 + 풍선 퀴즈) ---- */
 function rStory(q){
   const g=state.game;const st=q.story;
   if(g.storyPage<st.pages.length){
@@ -1022,39 +1284,48 @@ function rStory(q){
     app.innerHTML=gameHeader()+`
      <div class="card storypage">
        <div style="font-size:18px;color:var(--ink-soft)">📖 ${st.title}</div>
-       <div class="se">${pg.e}</div><div class="st">${pg.t}</div>
-       <div class="pagenum">${g.storyPage+1} / ${st.pages.length} 쪽</div>
+       <div class="se" id="se" style="cursor:pointer;">${pg.e}</div><div class="st">${pg.t}</div>
+       <div class="pagenum">${g.storyPage+1} / ${st.pages.length} 쪽 · 그림을 눌러 봐!</div>
      </div>
      <div style="display:flex;gap:10px;margin-top:16px;">
        <button class="btn ghost small" id="spk" style="flex:0 0 auto;">🔊</button>
        <button class="btn mint" id="nx" style="flex:1;">다음 쪽 ▶</button>
      </div>`;
     bindQuit();
+    const se=$('#se');
+    se.onclick=()=>{sfxClick();
+      se.animate([{transform:'scale(1) rotate(0)'},{transform:'scale(1.3) rotate(-6deg)'},
+        {transform:'scale(1.1) rotate(5deg)'},{transform:'scale(1)'}],{duration:450});};
     $('#spk').onclick=()=>speak(pg.t);
     $('#nx').onclick=()=>{sfxClick();g.storyPage++;render();};
     speak(pg.t);
   }else{
     const qq=st.q;
-    app.innerHTML=gameHeader()+`
-     <div class="qbox"><div class="qbig">🤔</div>
-       <div class="qtx">${qq.t}</div><button class="speaker" id="spk">🔊</button></div>
-     <div class="grid3" id="og"></div>`;
+    const q2={prompt:{big:'🤔',text:qq.t},speak:qq.t,hg:false,answer:qq.a,
+      opts:qq.opts.map(o=>({emoji:o.e,text:o.w}))};
+    app.innerHTML=gameHeader()+promptBox(q2)+`
+     <div class="scene sky">${drifts(['☁️','🕊️'])}
+       <div class="hintline">정답 풍선을 팡! 터뜨려 봐 🎈</div>
+       <div class="balloonwrap" id="og"></div></div>`;
     bindQuit();
     const og=$('#og');
-    qq.opts.forEach((o,i)=>{
-      const d=document.createElement('div');d.className='opt';
-      d.innerHTML=`<span class="em">${o.e}</span><span class="tx">${o.w}</span>`;
+    q2.opts.forEach((o,i)=>{
+      const d=document.createElement('div');d.className='balloon';
+      d.innerHTML=`<div class="bbody" style="background:${BCOL[i%4]};">${optInner(o,false)}</div><div class="str"></div>`;
       d.onclick=()=>{
-        if(i===qq.a){d.classList.add('good');sfxGood();speak('딩동댕! '+randPraise());
-          setTimeout(()=>{g.storyPage=0;g.i++;render();},1100);}
-        else{d.classList.add('bad');sfxBad();speak('다시 생각해 볼까?');
-          setTimeout(()=>d.classList.remove('bad'),450);}};
+        if(i===q2.answer){const g2=state.game;if(g2.lock)return;g2.lock=true;
+          sfxGood();speak('딩동댕! '+randPraise());d.classList.add('popped');
+          setTimeout(()=>{g2.storyPage=0;g2.lock=false;g2.i++;render();},950);}
+        else{sfxBad();speak(randOops());
+          d.classList.remove('boing');void d.offsetWidth;d.classList.add('boing');}
+      };
       og.appendChild(d);
     });
     $('#spk').onclick=()=>speak(qq.t);
     speak(qq.t);
   }
 }
+
 /* ---------------- FINISH / REWARDS / HATCH QUEUE ---------------- */
 function collectUnlocks(country,fn){
   const p=prog();
@@ -1192,8 +1463,8 @@ function judgeSpeech(said,target,attempt){
 }
 function chalItem(){const c=state.chal;return c.items[c.idx];}
 function rChallenge(){
-  const c=state.chal;const it=chalItem();const st=STAGES.find(s=>s.id===c.stage);
-  const gf=FRIENDS[st.guide];
+  const c=state.chal;const it=chalItem();
+  const gf=FRIENDS[hatchedCount()-1];
   if(c.mode==='speech')rChalSpeech(c,it,gf);else rChalEar(c,it,gf);
 }
 function rChalSpeech(c,it,gf){
@@ -1513,6 +1784,11 @@ function rAdmin(){
      </div>
    </div>
    <div class="card mb">
+     <h2>🔊 아이 목소리 선택</h2>
+     <div class="sub" style="text-align:left;margin-bottom:6px;">기기에 설치된 목소리 중에서 골라요. 목소리 종류는 폰·태블릿마다 달라요.</div>
+     <div id="voicebox"></div>
+   </div>
+   <div class="card mb">
      <h2>📈 우리 아이 한글 여정</h2>
      <div class="sub" style="text-align:left;margin-bottom:2px;">이 앱의 커리큘럼(9단계) 기준 학습 위치예요. 공식 발달 검사가 아니에요.</div>
      <div id="dash"></div>
@@ -1556,6 +1832,26 @@ function rAdmin(){
     DB.users.push({name:n,g:selG});await saveDB();sfxGood();render();
   };
   /* --- 마일스톤 대시보드 --- */
+  /* --- 목소리 선택 --- */
+  const vbox=$('#voicebox');
+  (function renderVoices(){
+    loadVoices();
+    const ko=koVoices();
+    if(!ko.length){
+      vbox.innerHTML=`<div class="sub" style="text-align:left;color:var(--ink-soft);">
+        이 기기에서 한국어 목소리를 찾지 못했어요. 기기의 "설정 → 음성/TTS"에서 한국어 음성을 추가하면 더 좋은 목소리를 쓸 수 있어요.</div>`;
+      return;
+    }
+    const cur=pickVoice();
+    const opts=ko.map(v=>`<option value="${esc(v.voiceURI)}"${cur&&v.voiceURI===cur.voiceURI?' selected':''}>${esc(v.name)}</option>`).join('');
+    vbox.innerHTML=`<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+      <select id="vsel" style="flex:1;min-width:160px;font-family:inherit;font-size:17px;padding:10px 12px;border-radius:14px;border:3px solid #EAF2F8;background:#fff;">${opts}</select>
+      <button class="btn" id="vtest" style="width:auto;padding:10px 16px;font-size:16px;">들어보기 🔊</button>
+    </div>`;
+    $('#vsel').onchange=async e=>{DB.voiceURI=e.target.value;await saveDB();
+      const v=VOICES.find(x=>x.voiceURI===DB.voiceURI);speak('안녕! 나랑 한글 놀이 하자!');};
+    $('#vtest').onclick=()=>{speak('안녕! 나는 너의 한글 친구야. 같이 놀자!');};
+  })();
   const dash=$('#dash');
   if(DB.users.length===0)dash.innerHTML='<div class="sub">아직 등록된 아이가 없어요.</div>';
   DB.users.forEach(u=>{
@@ -1602,6 +1898,8 @@ function rAdmin(){
 /* ---------------- BOOT ---------------- */
 (async function(){
   app.innerHTML='<div class="reward"><div class="big">🐭</div><h1>한글 친구들</h1><div class="sub">불러오는 중...</div></div>';
+  loadVoices();
+  try{speechSynthesis.onvoiceschanged=loadVoices;}catch(e){}
   await loadDB();
   render();
 })();
