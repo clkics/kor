@@ -49,7 +49,8 @@ body{font-family:'Jua','BM Jua','Apple SD Gothic Neo','Malgun Gothic',sans-serif
 .btn.small{font-size:18px;padding:11px 16px;border-radius:18px;width:auto;display:inline-block;}
 .btn:disabled{opacity:.45;pointer-events:none;}
 
-.guide{display:flex;align-items:flex-end;gap:12px;margin:8px 0 16px;position:relative;z-index:2;}
+.guide{display:flex;align-items:flex-start;gap:12px;margin:8px 0 16px;position:relative;z-index:2;}
+.guide .bubble{margin-top:8px;}
 .facewrap{display:flex;flex-direction:column;align-items:center;gap:2px;flex:0 0 auto;}
 .nextegg{text-align:center;cursor:pointer;margin-top:2px;}
 .nextegg .eggpct{font-size:11px;color:var(--ink-soft);font-weight:700;margin-top:1px;}
@@ -317,7 +318,7 @@ h2{font-size:23px;margin-bottom:10px;}
 <div id="app"></div>
 <script>
 /* ============================================================
-   한글 친구들 v4.4 — 나비 ㅣ 모음 누락 수정 + 자모 전수 검사 통과
+   한글 친구들 v4.6 — 전 화면 캐릭터 목소리 통일·알 별카운터(모은/필요)·말풍선 정렬·스피커 중복 제거·축하말 끊김 완전 해결
    ============================================================ */
 /* ---------------- DATA: themes ---------------- */
 const THEMES={
@@ -472,11 +473,12 @@ async function saveDB(){
 }
 const state={screen:'profiles',user:null,theme:'animal',stage:null,game:null,chal:null,
   sound:true,gate:null,queue:[],rewardInfo:null,greeted:false};
-function prog(){
-  if(!DB.progress[state.user])DB.progress[state.user]=
+function prog(uname){
+  const key=uname||state.user;
+  if(!DB.progress[key])DB.progress[key]=
     {theme:'animal',themeChosen:false,countries:{},trackOrder:[],
      daily:{date:today(),used:0},speech:{p1:0,p2:0,p3:0,ear:0},last:null};
-  const p=DB.progress[state.user];
+  const p=DB.progress[key];
   if(!p.countries)p.countries={};if(!p.trackOrder)p.trackOrder=[];
   if(!p.daily)p.daily={date:today(),used:0};
   if(!p.speech)p.speech={p1:0,p2:0,p3:0,ear:0};
@@ -503,7 +505,9 @@ function unlockedInTrack(ti){
 }
 function hatchedCount(){return prog().trackOrder.length>0?Math.max(1,unlockedInTrack(0)):1;}
 function stageUnlocked(st,c){
-  return true; /* 테스트 기간: 전체 단계 열림 (추후 복구: st.id===1?true:!!cprog(c).challenges[st.id-1]) */
+  if(st.id===1)return true;
+  if(st.id<=(prog().adminOpen||1))return true; /* 부모가 열어 준 단계 */
+  return !!cprog(c).challenges[st.id-1];       /* 이전 단계 도전(🎤) 성공 시 열림 */
 }
 function stageMissionsDone(st,c){return st.missions.every(m=>cprog(c).done.includes(m));}
 function countryPct(c){return Math.round(cprog(c).done.length/MISSION_TOTAL*100);}
@@ -525,14 +529,30 @@ function pickVoice(){
   const pref=ko.find(v=>/(Yuna|유나|Nari|나리|natural|Neural|Premium|Enhanced|Google)/i.test(v.name));
   return pref||ko[0];
 }
+/* 크롬 계열 버그 대응:
+   1) 발화 객체가 GC되면 목소리/음높이 설정이 유실됨 → KEEP에 참조 유지
+   2) cancel() 직후 즉시 speak()하면 설정이 씹히거나 무음 → 70ms 뒤 순서대로 발화 */
+const UTTER_KEEP=[];let UTTER_PEND=[],UTTER_T=null;
+function utterFlush(){
+  UTTER_T=null;
+  UTTER_PEND.forEach(u=>{try{speechSynthesis.speak(u);}catch(e){}});
+  UTTER_PEND=[];
+}
 function utter(t,pitch,rate,cancel){
   if(!state.sound)return;
-  try{const u=new SpeechSynthesisUtterance(t);
+  try{
+    const u=new SpeechSynthesisUtterance(t);
     const v=pickVoice();
     if(v){u.voice=v;u.lang=v.lang;}else{u.lang='ko-KR';}
     u.pitch=pitch;u.rate=rate;
-    if(cancel)speechSynthesis.cancel();
-    speechSynthesis.speak(u);}catch(e){}
+    UTTER_KEEP.push(u);if(UTTER_KEEP.length>12)UTTER_KEEP.shift();
+    u.onend=u.onerror=()=>{const i=UTTER_KEEP.indexOf(u);if(i>=0)UTTER_KEEP.splice(i,1);};
+    if(cancel){
+      try{speechSynthesis.cancel();}catch(e){}
+      UTTER_PEND=[u];clearTimeout(UTTER_T);UTTER_T=setTimeout(utterFlush,70);
+    }else if(UTTER_T){UTTER_PEND.push(u);}
+    else{try{speechSynthesis.speak(u);}catch(e){}}
+  }catch(e){}
 }
 /* 낱말·글자 발음: 왜곡 없이 또렷하게 */
 function speak(t){utter(t,1.0,0.88,true);}
@@ -598,6 +618,13 @@ function pictoHTML(word,mini){
   const p=PICTO[word];if(!p||!pictoStageOK())return null;
   return `<svg class="picto${mini?' mini':''}" viewBox="0 0 ${p.w} 100" data-pw="${word}" xmlns="http://www.w3.org/2000/svg">${p.s}</svg>`;
 }
+function bindEgg(){
+  const ne=document.getElementById('nextEgg');
+  if(!ne)return;
+  ne.onclick=()=>{const egg=ne.querySelector('.egg');
+    if(egg){egg.classList.remove('tap');void egg.offsetWidth;egg.classList.add('tap');}
+    sfxClick();speakAs(gfi(),'톡톡! 별을 모으면 곧 만날 수 있어!',true);};
+}
 function bindPicto(){
   document.querySelectorAll('.qbox .picto').forEach(el=>{
     el.onclick=ev=>{ev.stopPropagation();sfxClick();
@@ -621,7 +648,7 @@ function nextEggWidget(mini){
   const left=Math.max(0,need-s);
   return `<div class="nextegg" id="nextEgg" title="다음 친구의 알">
     ${eggHTML(nextIdx,pct,mini!==false)}
-    <div class="eggpct">${left>0?('⭐'+left):'곧 부화!'}</div></div>`;
+    <div class="eggpct">${left>0?('⭐'+Math.min(s,need)+'/'+need):'곧 부화!'}</div></div>`;
 }
 
 /* ---------------- QUESTION GENERATORS (38 missions) ---------------- */
@@ -631,7 +658,7 @@ function genQuestions(mid,tk){
   /* --- stage 1 --- */
   if(mid==='s1m1')return pick(W,5).map(w=>{
     const opts=shuffle([w,...other(w,3)]);
-    return{type:'choice',prompt:{big:'🔊'},speak:w.w+'! '+w.w+'는 어디 있을까?',
+    return{type:'choice',prompt:{big:'👂'},speak:w.w+'! '+w.w+'는 어디 있을까?',
       opts:opts.map(o=>({emoji:o.e})),answer:opts.indexOf(w),say:w.w};});
   if(mid==='s1m2')return pick(W,5).map(w=>{
     const set=new Set([w.w.length]);while(set.size<3)set.add(1+Math.floor(Math.random()*4));
@@ -902,8 +929,8 @@ function rProfiles(){
    <div class="famtag">시시태태가족</div>
    <h1>한글 친구들</h1>
    <div class="sub">십이간지 친구들과 떠나는 한글 모험!</div>
-   <div class="guide"><div class="face">🐭</div>
-     <div class="bubble"><b>쭈쭈</b>: 안녕! 누가 놀러 왔을까? 이름을 눌러 줘!</div></div>
+   <div class="guide"><div class="face" id="pFace" style="cursor:pointer;">🐭</div>
+     <div class="bubble"><b>쭈쭈</b>: 안녕! 이름을 눌러 줘!</div></div>
    <div id="plist"></div>
    ${storageOK?'':'<div class="note">⚠️ 저장 공간에 연결하지 못해서, 이번 판 기록은 화면을 닫으면 사라져요.</div>'}`;
   const pl=$('#plist');
@@ -918,7 +945,8 @@ function rProfiles(){
     pl.appendChild(b);
   });
   $('#gearBtn').onclick=()=>{sfxClick();openGate();};
-  speak('안녕! 누가 놀러 왔을까?');
+  $('#pFace').onclick=()=>{sfxClick();speakAs(0,'안녕! 이름을 눌러 줘!',true);};
+  speakAs(0,'안녕! 이름을 눌러 줘!',true);
 }
 /* ---------------- HOME ---------------- */
 function rHome(){
@@ -971,12 +999,10 @@ function rHome(){
   $('#colBtn').onclick=()=>{sfxClick();go('collection');};
   $('#themeChip').onclick=()=>{sfxClick();go('themes');};
   $('#gFace').onclick=()=>{
-    if(asleep){speak('쿨쿨... 내일 만나자...');return;}
+    if(asleep){speakAs(gfi(),'쿨쿨... 내일 만나자...',true);return;}
     const line=guideF.lines[Math.floor(Math.random()*guideF.lines.length)];
-    $('#gBubble').innerHTML=`<b>${guideF.n}</b>: ${line}`;speak(line);sfxClick();};
-  const ne=$('#nextEgg');
-  if(ne)ne.onclick=()=>{const egg=ne.querySelector('.egg');egg.classList.remove('tap');void egg.offsetWidth;egg.classList.add('tap');
-    sfxClick();speakAs(gfi(),'톡톡! 별을 모으면 곧 만날 수 있어!',true);};
+    $('#gBubble').innerHTML=`<b>${guideF.n}</b>: ${line}`;speakAs(gfi(),line,true);sfxClick();};
+  bindEgg();
   if(!state.greeted){state.greeted=true;speakAs(gfi(),greet,true);}
 }
 /* ---------------- THEMES ---------------- */
@@ -1042,8 +1068,9 @@ function rStage(){
   ml.appendChild(cd);
   $('#bk').onclick=()=>{sfxClick();go('home');};
   $('#gFace').onclick=()=>{const line=gf.lines[Math.floor(Math.random()*gf.lines.length)];
-    $('#gBubble').innerHTML=`<b>${gf.n}</b>: ${line}`;speak(line);sfxClick();};
-  speak(st.name+'에 온 걸 환영해!');
+    $('#gBubble').innerHTML=`<b>${gf.n}</b>: ${line}`;speakAs(gfi(),line,true);sfxClick();};
+  bindEgg();
+  speakAs(gfi(),st.name+'에 온 걸 환영해!',true);
 }
 /* ---------------- SLEEP (daily limit) ---------------- */
 function rSleep(){
@@ -1086,7 +1113,7 @@ function gameHeader(){
     <div class="gameegg">${nextEggWidget(true)}</div></div>
     <div class="dots">${dots}</div>`;
 }
-function bindQuit(){$('#quitBtn').onclick=()=>{sfxClick();
+function bindQuit(){bindEgg();$('#quitBtn').onclick=()=>{sfxClick();
   const g=state.game;if(g&&g.flashTimer)clearTimeout(g.flashTimer);
   try{speechSynthesis.cancel();}catch(e){}go('stage');};}
 function rGame(){
@@ -1113,7 +1140,9 @@ function promptBox(q){
     ${pic?pic:(q.prompt.text?`<div class="qtx">${q.prompt.text}</div>`:'')}
     <button class="speaker" id="spk">🔊</button></div>`;
 }
-function bindSpk(q){const b=$('#spk');if(b)b.onclick=()=>speak(q.speak);bindPicto();speak(q.speak);}
+/* 자동 안내는 큐로 이어 말함(칭찬을 끊지 않음). 🔊 버튼은 즉시(끊고) 말함 */
+function speakQ(t){utter(t,1.0,0.88,false);}
+function bindSpk(q){const b=$('#spk');if(b)b.onclick=()=>speak(q.speak);bindPicto();speakQ(q.speak);}
 function miniOK(q){
   const g=state.game;if(g.lock)return false;g.lock=true;g.streak++;sfxGood();
   const combo=(g.streak>=3&&g.streak%3===0);
@@ -1268,7 +1297,7 @@ function rMeet(q){
       if(g.meetTaps>=2)$('#hideBtn').style.visibility='visible';
     };
     $('#hideBtn').onclick=()=>{sfxClick();g.flashDone=true;render();};
-    speak(q.speak+'! 글자를 눌러 봐!');
+    speakQ(q.speak+'! 글자를 눌러 봐!');
     return;
   }
   app.innerHTML=gameHeader()+`
@@ -1291,7 +1320,7 @@ function rMeet(q){
     };
     h.appendChild(m);og.appendChild(h);
   });
-  speak('방금 만난 글자는 어디 숨었을까?');
+  speakQ('방금 만난 글자는 어디 숨었을까?');
 }
 /* ---- 🚂 칙칙폭폭 문장 기차 ---- */
 function rTrain(q){
@@ -1321,7 +1350,7 @@ function rTrain(q){
     pool.appendChild(c);
   });
   $('#spk').onclick=()=>speak(q.words.join(' '));
-  if(sen.picked.length===0&&sen.pool.length===q.words.length)speak(q.speak);
+  if(sen.picked.length===0&&sen.pool.length===q.words.length)speakQ(q.speak);
 }
 function checkTrain(q){
   const g=state.game;const ok=g.sen.picked.join(' ')===q.words.join(' ');
@@ -1865,16 +1894,33 @@ function rAdmin(){
   /* --- 아이 목록 (날짜 없음 · 성별 토글 · 삭제) --- */
   const ul=$('#ulist');
   DB.users.forEach((u,i)=>{
+    const p=prog(u.name);
     const row=document.createElement('div');
-    row.style.cssText='display:flex;align-items:center;gap:10px;padding:8px 4px;border-bottom:2px dashed #EAF2F8;';
-    row.innerHTML=`<button class="iconbtn ug" style="font-size:26px;" title="성별 바꾸기">${u.g==='girl'?'👧':'👦'}</button>
+    row.style.cssText='padding:8px 4px;border-bottom:2px dashed #EAF2F8;';
+    const opts=[1,2,3,4,5,6,7,8,9].map(n=>
+      `<option value="${n}"${(p.adminOpen||1)===n?' selected':''}>${n===1?'잠금(기본)':'단계 '+n+'까지 열기'}</option>`).join('');
+    row.innerHTML=`<div style="display:flex;align-items:center;gap:10px;">
+      <button class="iconbtn ug" style="font-size:26px;" title="성별 바꾸기">${u.g==='girl'?'👧':'👦'}</button>
       <span style="flex:1;font-size:19px;">${esc(u.name)}</span>
-      <button class="iconbtn ud" title="삭제">🗑️</button>`;
+      <button class="iconbtn ud" title="삭제">🗑️</button></div>
+      <div style="display:flex;align-items:center;gap:8px;margin-top:6px;padding-left:4px;flex-wrap:wrap;">
+        <span style="font-size:13px;color:var(--ink-soft);">🔓</span>
+        <select class="uo" style="flex:1;min-width:130px;font-family:inherit;font-size:14px;padding:7px 10px;border-radius:12px;border:3px solid #EAF2F8;background:#fff;">${opts}</select>
+        <button class="btn ghost ur" style="width:auto;padding:7px 12px;font-size:14px;">🔄 오늘 기회 리셋</button>
+      </div>`;
     row.querySelector('.ug').onclick=async()=>{sfxClick();
       u.g=u.g==='girl'?'boy':'girl';await saveDB();render();};
     row.querySelector('.ud').onclick=async()=>{sfxClick();
       if(!confirm(u.name+' 기록을 모두 지울까요?'))return;
       DB.users.splice(i,1);delete DB.progress[u.name];await saveDB();render();};
+    row.querySelector('.uo').onchange=async e=>{sfxClick();
+      p.adminOpen=+e.target.value;await saveDB();};
+    row.querySelector('.ur').onclick=async()=>{sfxClick();
+      const d=p.daily||(p.daily={date:today(),used:0});
+      if(d.date!==today()){d.date=today();d.used=0;d.rs=false;}
+      if(d.rs){alert('오늘은 이미 리셋했어요. 리셋은 하루 1번!');return;}
+      d.used=0;d.rs=true;await saveDB();
+      alert(u.name+'의 오늘 모험 기회를 3개로 리셋했어요! (하루 1회)');};
     ul.appendChild(row);
   });
   /* --- 추가 (성별 선택) --- */
