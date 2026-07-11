@@ -318,7 +318,7 @@ h2{font-size:23px;margin-bottom:10px;}
 <div id="app"></div>
 <script>
 /* ============================================================
-   한글 친구들 v4.6 — 전 화면 캐릭터 목소리 통일·알 별카운터(모은/필요)·말풍선 정렬·스피커 중복 제거·축하말 끊김 완전 해결
+   한글 친구들 v5.1 — 부모 관문: 곱셈만(비밀번호 단계 제거)
    ============================================================ */
 /* ---------------- DATA: themes ---------------- */
 const THEMES={
@@ -529,39 +529,106 @@ function pickVoice(){
   const pref=ko.find(v=>/(Yuna|유나|Nari|나리|natural|Neural|Premium|Enhanced|Google)/i.test(v.name));
   return pref||ko[0];
 }
-/* 크롬 계열 버그 대응:
-   1) 발화 객체가 GC되면 목소리/음높이 설정이 유실됨 → KEEP에 참조 유지
-   2) cancel() 직후 즉시 speak()하면 설정이 씹히거나 무음 → 70ms 뒤 순서대로 발화 */
-const UTTER_KEEP=[];let UTTER_PEND=[],UTTER_T=null;
-function utterFlush(){
-  UTTER_T=null;
-  UTTER_PEND.forEach(u=>{try{speechSynthesis.speak(u);}catch(e){}});
-  UTTER_PEND=[];
+/* ---------------- 통합 음성 파이프라인 ----------------
+   audio/manifest.json 이 있으면 → 미리 녹음된 AI 음성(mp3) 재생
+   없으면 → 기기 TTS 사용 (크롬 GC·cancel 버그 대응 포함)
+   모든 발화는 하나의 순차 큐로 재생되어 절대 서로 끊지 않음 */
+function fnv(s){let h=0x811c9dc5;for(let i=0;i<s.length;i++){h^=s.charCodeAt(i);h=Math.imul(h,0x01000193)>>>0;}return('0000000'+h.toString(16)).slice(-8);}
+let AUDIO_PACK=null;
+fetch('audio/manifest.json').then(r=>r.ok?r.json():null).then(j=>{if(j&&typeof j==='object')AUDIO_PACK=j;}).catch(()=>{});
+const UTTER_KEEP=[];const SPQ=[];let SP_BUSY=false,SP_AUDIO=null,SP_T=null,SP_G=null;
+function spCancel(){
+  SPQ.length=0;clearTimeout(SP_T);clearTimeout(SP_G);
+  if(SP_AUDIO){try{SP_AUDIO.pause();}catch(e){}SP_AUDIO=null;}
+  try{speechSynthesis.cancel();}catch(e){}
+  SP_BUSY=false;
 }
-function utter(t,pitch,rate,cancel){
-  if(!state.sound)return;
-  try{
-    const u=new SpeechSynthesisUtterance(t);
-    const v=pickVoice();
-    if(v){u.voice=v;u.lang=v.lang;}else{u.lang='ko-KR';}
-    u.pitch=pitch;u.rate=rate;
-    UTTER_KEEP.push(u);if(UTTER_KEEP.length>12)UTTER_KEEP.shift();
-    u.onend=u.onerror=()=>{const i=UTTER_KEEP.indexOf(u);if(i>=0)UTTER_KEEP.splice(i,1);};
-    if(cancel){
-      try{speechSynthesis.cancel();}catch(e){}
-      UTTER_PEND=[u];clearTimeout(UTTER_T);UTTER_T=setTimeout(utterFlush,70);
-    }else if(UTTER_T){UTTER_PEND.push(u);}
-    else{try{speechSynthesis.speak(u);}catch(e){}}
-  }catch(e){}
+function spClean(t){return String(t).replace(/[\u{1F000}-\u{1FAFF}\u{2600}-\u{27BF}\u{FE0F}]/gu,'').replace(/\s+/g,' ').trim();}
+function spSay(t,fi,pitch,rate,cancel){
+  if(!state.sound||!t)return;
+  t=spClean(t);if(!t)return;
+  if(cancel)spCancel();
+  SPQ.push({t,fi,pitch,rate});
+  if(!SP_BUSY){SP_BUSY=true;spNext(cancel?80:0);}
 }
-/* 낱말·글자 발음: 왜곡 없이 또렷하게 */
-function speak(t){utter(t,1.0,0.88,true);}
-/* 캐릭터 수다: 친구마다 다른 음색. cancel=false면 앞말 끝나고 이어 말함 */
+function spNext(delay){
+  clearTimeout(SP_T);clearTimeout(SP_G);
+  SP_T=setTimeout(()=>{
+    const it=SPQ.shift();
+    if(!it){SP_BUSY=false;return;}
+    const key=fnv(it.fi+'|'+it.t);
+    if(AUDIO_PACK&&AUDIO_PACK[key]){
+      try{
+        const a=new Audio('audio/'+key+'.mp3');SP_AUDIO=a;
+        a.onended=a.onerror=()=>{SP_AUDIO=null;spNext(80);};
+        a.play().catch(()=>{SP_AUDIO=null;spNext(0);});
+        SP_G=setTimeout(()=>{if(SP_AUDIO===a){try{a.pause();}catch(e){}SP_AUDIO=null;spNext(0);}},15000);
+      }catch(e){SP_AUDIO=null;spNext(0);}
+    }else{
+      try{
+        const u=new SpeechSynthesisUtterance(it.t);
+        const v=pickVoice();
+        if(v){u.voice=v;u.lang=v.lang;}else{u.lang='ko-KR';}
+        u.pitch=it.pitch;u.rate=it.rate;
+        UTTER_KEEP.push(u);if(UTTER_KEEP.length>12)UTTER_KEEP.shift();
+        u.onend=u.onerror=()=>{const i=UTTER_KEEP.indexOf(u);if(i>=0)UTTER_KEEP.splice(i,1);spNext(80);};
+        speechSynthesis.speak(u);
+        SP_G=setTimeout(()=>{spNext(0);},12000);
+      }catch(e){spNext(0);}
+    }
+  },delay||0);
+}
+/* 역할별 목소리:
+   speak   = 또렷한 안내(즉시, 앞말 중단)   speakQ = 안내(이어 말하기)
+   speakW  = 정답 낱말 강조(천천히·또박또박) speakAs = 캐릭터 음색(친구별 다름) */
+function utter(t,pitch,rate,cancel){spSay(t,-1,pitch,rate,cancel);}
+function speak(t){spSay(t,-1,1.0,0.88,true);}
+function speakQ(t){spSay(t,-1,1.0,0.9,false);}
+function speakW(t,cancel){spSay(t,-2,1.02,0.62,!!cancel);}
 function speakAs(fi,t,cancel){
   const f=FRIENDS[fi]||FRIENDS[0];const vp=f.vp||{p:1.1,r:1.0};
-  utter(t,vp.p,vp.r,cancel!==false);
+  spSay(t,fi,vp.p,vp.r,cancel!==false);
 }
 function gfi(){return hatchedCount()-1;}
+/* ---------------- 오디오 팩용 대사 수집기 (앱 동작에는 영향 없음) ---------------- */
+function collectSpeechLines(){
+  const out=new Map();
+  const add=(fi,t)=>{t=spClean(t||'');if(!t)return;out.set(fnv(fi+'|'+t),{fi,t});};
+  /* 캐릭터 목소리(12마리 각각) */
+  FRIENDS.forEach((f,i)=>{
+    (f.lines||[]).forEach(l=>add(i,l));
+    PRAISES.forEach(p=>{add(i,p);add(i,'딩동댕! '+p);});
+    OOPSES.forEach(o=>add(i,o));
+    [3,6,9].forEach(n=>add(i,'우와! '+kNum(n)+' 개나 연속으로 맞혔어! 정말 대단해!'));
+    add(i,'좋은 아침! 오늘도 모험 가자!');
+    add(i,'어서 와! 오늘은 어디로 모험 갈까?');
+    add(i,'반짝반짝 저녁이야! 자기 전에 살짝 모험 갈까?');
+    add(i,'새 모험은 내일! 그런데 복습은 지금도 할 수 있어!');
+    add(i,'쿨쿨... 내일 만나자...');
+    add(i,'톡톡톡! 나는 알 속에 있는 친구야! 별을 모으면 나를 만날 수 있어!');
+    add(i,'오늘 새 모험을 다 했어! 나는 이제 잘래. 그런데 복습은 더 할 수 있어! 별도 받을 수 있다구! 내일 또 만나자!');
+    STAGES.forEach(st=>add(i,st.name+'에 온 걸 환영해!'));
+    add(i,'미션을 모두 깨면 도전할 수 있어!');
+    add(i,'음, 기차 칸 순서가 좀 이상한걸? 다시 연결해 보자!');
+    add(i,'칙칙폭폭! 기차 출발!');
+    if(typeof PICTO!=='undefined')Object.values(PICTO).forEach(p=>add(i,p.h));
+  });
+  add(0,'안녕! 이름을 눌러 줘!');
+  /* 내레이터(-1: 문제 안내·정답 문장), 강조 낱말(-2) — 랜덤 생성 커버 위해 반복 수집 */
+  for(const tk of Object.keys(THEMES))for(const mid of Object.keys(MISSIONS)){
+    for(let r=0;r<30;r++){
+      genQuestions(mid,tk).forEach(q=>{
+        add(-1,q.speak);add(-1,q.say);
+        if(q.word){add(-2,q.word);}
+        if(q.story){q.story.pages.forEach(pg=>add(-1,pg.t));add(-1,q.story.q.t);}
+      });
+    }
+  }
+  ['잘 봐! 곧 사라진다!','잘 봐! 글자를 콕콕 누르면 소리가 나!','방금 만난 글자는 어디 숨었을까?','이 놀이는 준비 중이야!']
+    .forEach(t=>add(-1,t));
+  return [...out.entries()].map(([key,v])=>({key,fi:v.fi,text:v.t}));
+}
+window.collectSpeechLines=collectSpeechLines;
 let AC=null;
 function tone(f,d,delay,type,g){
   if(!state.sound)return;
@@ -596,8 +663,10 @@ function pick(a,n){return shuffle(a).slice(0,n);}
 function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;');}
 function go(sc){state.screen=sc;render();}
 function today(){return new Date().toISOString().slice(0,10);}
-function randPraise(){const P=['참 잘했어요!','우와, 최고야!','정말 대단해!','멋지다 멋져!','짝짝짝, 훌륭해!','딩동댕동!','대박! 천재인가?','야호, 성공이야!','반짝반짝 빛난다!','슈퍼 스타!'];return P[Math.floor(Math.random()*P.length)];}
-function randOops(){const P=['앗, 요건 아닌가 봐!','으잉? 다시 한번!','아깝다! 또 해보자!','요게 아니네~ 다시 찾아보자!','살짝 아쉬워! 한 번 더!'];return P[Math.floor(Math.random()*P.length)];}
+const PRAISES=['참 잘했어요!','우와, 최고야!','정말 대단해!','멋지다 멋져!','짝짝짝, 훌륭해!','딩동댕동!','야호, 성공이야!','반짝반짝 빛나는 실력이야!','오늘 정말 잘하는걸!','최고 최고!'];
+function randPraise(){return PRAISES[Math.floor(Math.random()*PRAISES.length)];}
+const OOPSES=['앗, 요건 아닌가 봐!','으잉? 다시 한번!','아깝다! 또 해 보자!','요게 아니네. 다시 찾아보자!','살짝 아쉬워! 한 번 더!'];
+function randOops(){return OOPSES[Math.floor(Math.random()*OOPSES.length)];}
 const CHO=['ㄱ','ㄲ','ㄴ','ㄷ','ㄸ','ㄹ','ㅁ','ㅂ','ㅃ','ㅅ','ㅆ','ㅇ','ㅈ','ㅉ','ㅊ','ㅋ','ㅌ','ㅍ','ㅎ'];
 const JUNG=['ㅏ','ㅐ','ㅑ','ㅒ','ㅓ','ㅔ','ㅕ','ㅖ','ㅗ','ㅘ','ㅙ','ㅚ','ㅛ','ㅜ','ㅝ','ㅞ','ㅟ','ㅠ','ㅡ','ㅢ','ㅣ'];
 function decompose(ch){const c=ch.charCodeAt(0)-0xAC00;if(c<0||c>11171)return null;
@@ -623,7 +692,9 @@ function bindEgg(){
   if(!ne)return;
   ne.onclick=()=>{const egg=ne.querySelector('.egg');
     if(egg){egg.classList.remove('tap');void egg.offsetWidth;egg.classList.add('tap');}
-    sfxClick();speakAs(gfi(),'톡톡! 별을 모으면 곧 만날 수 있어!',true);};
+    sfxClick();
+    const ni=Math.min(hatchedCount(),11); /* 알 속 = 다음 친구의 목소리 */
+    speakAs(ni,'톡톡톡! 나는 알 속에 있는 친구야! 별을 모으면 나를 만날 수 있어!',true);};
 }
 function bindPicto(){
   document.querySelectorAll('.qbox .picto').forEach(el=>{
@@ -651,6 +722,25 @@ function nextEggWidget(mini){
     <div class="eggpct">${left>0?('⭐'+Math.min(s,need)+'/'+need):'곧 부화!'}</div></div>`;
 }
 
+/* ---------------- 한국어 조사·수사 도우미 ---------------- */
+function hasBatchim(s){
+  const ch=s.charCodeAt(s.length-1);
+  if(ch>=0x3131&&ch<=0x314E&&!(ch>=0x314F))return true; /* 자음 낱자(기역·니은…)는 받침으로 끝남 */
+  const c=ch-0xAC00;
+  return c>=0&&c<=11171&&(c%28)>0;
+}
+function pJ(w,a,b){return hasBatchim(w)?a:b;}
+function iga(w){return w+pJ(w,'이','가');}       /* 알이 / 사자가 */
+function eunneun(w){return w+pJ(w,'은','는');}   /* 알은 / 사자는 */
+function eulreul(w){return w+pJ(w,'을','를');}   /* 알을 / 사자를 */
+function euro(w){                                 /* 공으로 / 티로 / 알로(ㄹ받침) */
+  const ch=w.charCodeAt(w.length-1);const c=ch-0xAC00;
+  const jong=(c>=0&&c<=11171)?(c%28):(hasBatchim(w)?1:0);
+  return w+((jong===0||jong===8)?'로':'으로');
+}
+function rang(w){return w+pJ(w,'이랑','랑');}     /* 알이랑 / 아랑 */
+function kNum(n){return ['영','한','두','세','네','다섯','여섯','일곱','여덟','아홉','열'][n]||String(n);}
+
 /* ---------------- QUESTION GENERATORS (38 missions) ---------------- */
 function genQuestions(mid,tk){
   const T=THEMES[tk];const W=T.words;
@@ -658,23 +748,23 @@ function genQuestions(mid,tk){
   /* --- stage 1 --- */
   if(mid==='s1m1')return pick(W,5).map(w=>{
     const opts=shuffle([w,...other(w,3)]);
-    return{type:'choice',prompt:{big:'👂'},speak:w.w+'! '+w.w+'는 어디 있을까?',
+    return{type:'choice',prompt:{big:'👂'},word:w.w,speak:eunneun(w.w)+' 어디 있을까?',
       opts:opts.map(o=>({emoji:o.e})),answer:opts.indexOf(w),say:w.w};});
   if(mid==='s1m2')return pick(W,5).map(w=>{
     const set=new Set([w.w.length]);while(set.size<3)set.add(1+Math.floor(Math.random()*4));
     const opts=shuffle([...set]);
     return{type:'choice',prompt:{big:w.e,text:w.w},
-      speak:w.w+'! 몇 번 박수 칠까? '+w.w.split('').join(', '),
-      opts:opts.map(n=>({text:'👏'.repeat(n),sub:n+'번'})),
-      answer:opts.indexOf(w.w.length),say:w.w+'는 '+w.w.length+'글자!'};});
+      word:w.w,speak:'박수를 몇 번 칠까? '+w.w.split('').join(', '),
+      opts:opts.map(n=>({text:'👏'.repeat(n),sub:kNum(n)+' 번'})),
+      answer:opts.indexOf(w.w.length),say:eunneun(w.w)+' '+kNum(w.w.length)+' 글자야!'};});
   /* --- stage 2 --- */
   if(mid==='s2m1')return pick(W.filter(w=>w.w.length<=3),5).map(w=>{
     const set=new Set([w.w.length]);while(set.size<3)set.add(1+Math.floor(Math.random()*4));
     const opts=shuffle([...set]);
     return{type:'choice',prompt:{big:w.e,text:w.w},
-      speak:w.w+'! 몇 번 박수 칠까? '+w.w.split('').join(', '),
-      opts:opts.map(n=>({text:'👏'.repeat(n),sub:n+'번'})),
-      answer:opts.indexOf(w.w.length),say:w.w+'는 '+w.w.length+'글자!'};});
+      word:w.w,speak:'박수를 몇 번 칠까? '+w.w.split('').join(', '),
+      opts:opts.map(n=>({text:'👏'.repeat(n),sub:kNum(n)+' 번'})),
+      answer:opts.indexOf(w.w.length),say:eunneun(w.w)+' '+kNum(w.w.length)+' 글자야!'};});
   if(mid==='s2m2'){const qs=[];
     for(const a of shuffle(W)){if(qs.length>=5)break;
       const bs=W.filter(x=>x.w.length<a.w.length);if(!bs.length)continue;
@@ -682,7 +772,7 @@ function genQuestions(mid,tk){
       const opts=shuffle([a,b]);
       qs.push({type:'choice',prompt:{text:'더 긴 낱말은 어느 것일까?'},
         speak:'더 긴 낱말을 찾아 줘! '+a.w+', 그리고 '+b.w+'!',
-        opts:opts.map(o=>({emoji:o.e,text:o.w})),answer:opts.indexOf(a),say:a.w+'가 더 길어!'});}
+        opts:opts.map(o=>({emoji:o.e,text:o.w})),answer:opts.indexOf(a),say:iga(a.w)+' 더 길어!'});}
     return qs;}
   if(mid==='s2m3'){const qs=[];
     for(const w of shuffle(W)){if(qs.length>=5)break;
@@ -690,9 +780,9 @@ function genQuestions(mid,tk){
       const diff=W.filter(x=>x.w.length!==w.w.length);
       if(!same.length||diff.length<2)continue;
       const c=same[0];const opts=shuffle([c,...pick(diff,2)]);
-      qs.push({type:'choice',prompt:{big:w.e,text:'「'+w.w+'」와 글자 수가 같은 낱말은?'},
-        speak:w.w+'는 '+w.w.length+'글자! 글자 수가 같은 낱말을 찾아 줘!',
-        opts:opts.map(o=>({emoji:o.e,text:o.w})),answer:opts.indexOf(c),say:c.w+'도 '+w.w.length+'글자!'});}
+      qs.push({type:'choice',prompt:{big:w.e,text:'「'+w.w+'」'+pJ(w.w,'과','와')+' 글자 수가 같은 낱말은?'},
+        word:w.w,speak:eunneun(w.w)+' '+kNum(w.w.length)+' 글자야! 글자 수가 같은 낱말을 찾아 줘!',
+        opts:opts.map(o=>({emoji:o.e,text:o.w})),answer:opts.indexOf(c),say:c.w+'도 '+kNum(w.w.length)+' 글자야!'});}
     return qs;}
   /* --- stage 3 --- */
   if(mid==='s3m1'){const qs=[];const used=new Set();
@@ -703,26 +793,26 @@ function genQuestions(mid,tk){
       if(wrong.length<2)continue;used.add(syl);
       const opts=shuffle([w,...pick(wrong,2)]);
       qs.push({type:'choice',prompt:{big:syl,text:'이 글자가 숨어 있는 낱말은?'},
-        speak:syl+'! '+syl+' 글자가 숨어 있는 낱말을 찾아 줘!',
-        opts:opts.map(o=>({emoji:o.e,text:o.w})),answer:opts.indexOf(w),say:w.w+' 안에 '+syl+'!'});}
+        word:syl,speak:syl+' 글자가 숨어 있는 낱말을 찾아 줘!',
+        opts:opts.map(o=>({emoji:o.e,text:o.w})),answer:opts.indexOf(w),say:w.w+' 안에 '+iga(syl)+' 있어!'});}
     return qs;}
   if(mid==='s3m2'){const qs=[];
     for(const w of shuffle(W)){if(qs.length>=5)break;
       const syl=w.w[0];const wrong=W.filter(x=>x.w[0]!==syl);
       if(wrong.length<2)continue;
       const opts=shuffle([w,...pick(wrong,2)]);
-      qs.push({type:'choice',prompt:{big:syl,text:'「'+syl+'」로 시작하는 낱말은?'},
-        speak:syl+'! '+syl+'로 시작하는 낱말을 찾아 줘!',
-        opts:opts.map(o=>({emoji:o.e,text:o.w})),answer:opts.indexOf(w),say:w.w+'! '+syl+'로 시작!'});}
+      qs.push({type:'choice',prompt:{big:syl,text:'「'+syl+'」'+pJ(syl,'으로','로')+' 시작하는 낱말은?'},
+        word:syl,speak:euro(syl)+' 시작하는 낱말을 찾아 줘!',
+        opts:opts.map(o=>({emoji:o.e,text:o.w})),answer:opts.indexOf(w),say:w.w+'! '+euro(syl)+' 시작해!'});}
     return qs;}
   if(mid==='s3m3'){const qs=[];
     for(const w of shuffle(W)){if(qs.length>=5)break;
       const syl=w.w[w.w.length-1];const wrong=W.filter(x=>x.w[x.w.length-1]!==syl);
       if(wrong.length<2)continue;
       const opts=shuffle([w,...pick(wrong,2)]);
-      qs.push({type:'choice',prompt:{big:syl,text:'「'+syl+'」로 끝나는 낱말은?'},
-        speak:syl+'! '+syl+'로 끝나는 낱말을 찾아 줘!',
-        opts:opts.map(o=>({emoji:o.e,text:o.w})),answer:opts.indexOf(w),say:w.w+'! '+syl+'로 끝나요!'});}
+      qs.push({type:'choice',prompt:{big:syl,text:'「'+syl+'」'+pJ(syl,'으로','로')+' 끝나는 낱말은?'},
+        word:syl,speak:euro(syl)+' 끝나는 낱말을 찾아 줘!',
+        opts:opts.map(o=>({emoji:o.e,text:o.w})),answer:opts.indexOf(w),say:w.w+'! '+euro(syl)+' 끝나!'});}
     return qs;}
   if(mid==='s3m4')return pick(W,5).map(w=>{
     const o2=other(w,1)[0];
@@ -733,24 +823,24 @@ function genQuestions(mid,tk){
   /* --- stage 4 --- */
   if(mid==='s4m1')return shuffle(VOWELS).map(v=>{
     const opts=shuffle([v,...pick(VOWELS.filter(x=>x.l!==v.l),2)]);
-    return{type:'choice',prompt:{big:'🔊',text:'「'+v.s+'」 소리 글자는?'},
-      speak:v.s+'! '+v.s+'! 이 소리 글자를 찾아 줘!',
-      opts:opts.map(o=>({text:o.l})),hg:true,answer:opts.indexOf(v),say:v.l+'는 '+v.s+'!'};});
+    return{type:'choice',prompt:{big:'🔊',text:'「'+v.s+'」 소리가 나는 글자는?'},
+      word:v.s,speak:v.s+'! 이 소리가 나는 글자를 찾아 줘!',
+      opts:opts.map(o=>({text:o.l})),hg:true,answer:opts.indexOf(v),say:eunneun(v.l)+' '+v.s+' 소리가 나!'};});
   if(mid==='s4m2')return shuffle(VOWELS).map(v=>{
     const opts=shuffle([v,...pick(VOWELS.filter(x=>x.l!==v.l),2)]);
     return{type:'choice',prompt:{big:v.l,text:'이 글자는 무슨 소리일까?'},
       speak:'이 글자는 무슨 소리일까? 골라 봐!',
-      opts:opts.map(o=>({text:o.s})),answer:opts.indexOf(v),say:v.l+'는 '+v.s+'!'};});
+      opts:opts.map(o=>({text:o.s})),answer:opts.indexOf(v),say:eunneun(v.l)+' '+v.s+' 소리가 나!'};});
   if(mid==='s4m3')return shuffle(VOWELS).map(v=>{
     const opts=shuffle([v,...pick(VOWELS.filter(x=>x.l!==v.l),2)]);
     return{type:'choice',prompt:{big:v.s,text:'짝꿍 모음 글자를 찾아 줘!'},
-      speak:v.s+'의 짝꿍 글자를 찾아 줘!',
-      opts:opts.map(o=>({text:o.l})),hg:true,answer:opts.indexOf(v),say:v.s+'랑 '+v.l+'는 짝꿍!'};});
+      word:v.s,speak:v.s+' 소리의 짝꿍 글자를 찾아 줘!',
+      opts:opts.map(o=>({text:o.l})),hg:true,answer:opts.indexOf(v),say:rang(v.s)+' '+eunneun(v.l)+' 짝꿍이야!'};});
   if(mid==='s4m4')return shuffle(VOWELS).map(v=>{
     const opts=shuffle([v,...pick(VOWELS.filter(x=>x.l!==v.l),2)]);
     return{type:'flash',flash:v.l,prompt:{text:'방금 본 글자는 어느 것?'},
       speak:'잘 봐! 곧 사라진다!',
-      opts:opts.map(o=>({text:o.l})),hg:true,answer:opts.indexOf(v),say:v.l+'! 기억력 최고!'};});
+      opts:opts.map(o=>({text:o.l})),hg:true,answer:opts.indexOf(v),say:v.l+'! 잘 기억했어!'};});
   if(mid==='s4m5'){
     const bank=[];const seen=new Set();
     for(const w of W.concat(GENERIC_V)){
@@ -761,13 +851,13 @@ function genQuestions(mid,tk){
       const vv=VOWELS.find(v=>v.l===b.v);
       const opts=shuffle([vv,...pick(VOWELS.filter(x=>x.l!==b.v),2)]);
       return{type:'choice',prompt:{big:b.e,text:'「'+b.syl+'」에 숨은 모음은? ('+b.w+')'},
-        speak:b.w+'의 '+b.syl+'! 어떤 모음이 숨어 있을까?',
-        opts:opts.map(o=>({text:o.l})),hg:true,answer:opts.indexOf(vv),say:b.syl+' 안에 '+b.v+'!'};});}
+        word:b.syl,speak:b.w+'의 '+b.syl+'! 어떤 모음이 숨어 있을까?',
+        opts:opts.map(o=>({text:o.l})),hg:true,answer:opts.indexOf(vv),say:b.syl+' 안에 '+iga(b.v)+' 있어!'};});}
   /* --- stage 5 --- */
   if(mid==='s5m1')return shuffle(CVS).map(c=>{
     const opts=shuffle([c,...pick(CVS.filter(x=>x.l!==c.l),2)]);
-    return{type:'choice',prompt:{big:'🔊',text:'「'+c.l+'」 소리 글자는?'},
-      speak:c.l+'! '+c.l+'! 이 소리 글자를 찾아 줘!',
+    return{type:'choice',prompt:{big:'🔊',text:'「'+c.l+'」 소리가 나는 글자는?'},
+      word:c.l,speak:c.l+'! 이 소리가 나는 글자를 찾아 줘!',
       opts:opts.map(o=>({text:o.l})),hg:true,answer:opts.indexOf(c),say:c.l+'! 찾았다!'};});
   if(mid==='s5m2')return shuffle(CVS).map(c=>{
     const o2=pick(CVS.filter(x=>x.l!==c.l),1)[0];
@@ -778,51 +868,51 @@ function genQuestions(mid,tk){
   if(mid==='s5m3')return shuffle(ONSETS).map(b=>{
     const opts=shuffle([b.o,...pick(CVS.filter(x=>x.l!==b.o).map(x=>x.l),2)]);
     return{type:'choice',prompt:{big:b.e,text:'「'+b.w+'」의 첫소리는?'},
-      speak:b.w+'! '+b.w+'는 어떤 소리로 시작할까?',
-      opts:opts.map(o=>({text:o})),hg:true,answer:opts.indexOf(b.o),say:b.w+'는 '+b.o+'로 시작!'};});
+      word:b.w,speak:eunneun(b.w)+' 어떤 소리로 시작할까?',
+      opts:opts.map(o=>({text:o})),hg:true,answer:opts.indexOf(b.o),say:eunneun(b.w)+' '+b.o+pJ(b.o,'으로','로')+' 시작해!'};});
   if(mid==='s5m4')return shuffle(CVS).map(c=>{
     const opts=shuffle([c,...pick(CVS.filter(x=>x.l!==c.l),2)]);
     return{type:'flash',flash:c.l,prompt:{text:'방금 본 글자는 어느 것?'},
       speak:'잘 봐! 곧 사라진다!',
-      opts:opts.map(o=>({text:o.l})),hg:true,answer:opts.indexOf(c),say:c.l+'! 기억했구나!'};});
+      opts:opts.map(o=>({text:o.l})),hg:true,answer:opts.indexOf(c),say:c.l+'! 잘 기억했어!'};});
   if(mid==='s5m5')return shuffle(CVS).map(c=>{
     const opts=shuffle([c,...pick(CVS.filter(x=>x.l!==c.l),3)]);
-    return{type:'choice',prompt:{big:'⚡',text:'빨리빨리! 「'+c.l+'」를 찾아라!'},
-      speak:'빨리빨리! '+c.l+'! '+c.l+'를 찾아라!',
+    return{type:'choice',prompt:{big:'⚡',text:'빨리빨리! 「'+c.l+'」'+pJ(c.l,'을','를')+' 찾아라!'},
+      word:c.l,speak:'빨리빨리! '+eulreul(c.l)+' 찾아라!',
       opts:opts.map(o=>({text:o.l})),hg:true,answer:opts.indexOf(c),say:'번개처럼 빨랐어!'};});
   /* --- stage 6 --- */
   if(mid==='s6m1')return shuffle(COMBOS).map(c=>{
     const opts=shuffle([c.r,...pick(COMBOS.filter(x=>x.r!==c.r).map(x=>x.r),2)]);
     return{type:'choice',prompt:{big:c.c+' + '+c.v+' = ?',text:'글자를 조립하면?'},
       speak:'두 글자를 붙이면 어떤 글자가 될까?',
-      opts:opts.map(o=>({text:o})),hg:true,answer:opts.indexOf(c.r),say:c.r+'! '+c.c+' 더하기 '+c.v+'는 '+c.r+'!'};});
+      opts:opts.map(o=>({text:o})),hg:true,answer:opts.indexOf(c.r),say:c.r+'! 둘을 붙이면 '+iga(c.r)+' 돼!'};});
   if(mid==='s6m2')return shuffle(COMBOS).map(c=>{
     const wrong=pick(COMBOS.filter(x=>x.r!==c.r),2).map(x=>x.c+' + '+x.v);
     const right=c.c+' + '+c.v;const opts=shuffle([right,...wrong]);
     return{type:'choice',prompt:{big:c.r,text:'무엇과 무엇으로 만들었을까?'},
-      speak:c.r+'! 무엇과 무엇을 붙여 만들었을까?',
-      opts:opts.map(o=>({text:o})),answer:opts.indexOf(right),say:c.r+'는 '+c.c+' 더하기 '+c.v+'!'};});
+      word:c.r,speak:'무엇과 무엇을 붙여 만들었을까?',
+      opts:opts.map(o=>({text:o})),answer:opts.indexOf(right),say:'딩동댕! 잘 붙였어!'};});
   if(mid==='s6m3')return shuffle(COMBOS).map(c=>{
     const opts=shuffle([c.v,...pick(VOWELS.filter(x=>x.l!==c.v).map(x=>x.l),2)]);
     return{type:'choice',prompt:{big:c.c+' + ❓ = '+c.r,text:'빠진 모음은?'},
-      speak:c.r+'를 만들려면 무엇이 빠졌을까?',
-      opts:opts.map(o=>({text:o})),hg:true,answer:opts.indexOf(c.v),say:c.v+'가 빠졌었네!'};});
+      word:c.r,speak:eulreul(c.r)+' 만들려면 무엇이 빠졌을까?',
+      opts:opts.map(o=>({text:o})),hg:true,answer:opts.indexOf(c.v),say:iga(c.v)+' 빠져 있었네!'};});
   if(mid==='s6m4')return shuffle(COMBOS).map(c=>{
     const opts=shuffle([c.c,...pick(COMBOS.filter(x=>x.c!==c.c).map(x=>x.c),2)]);
     return{type:'choice',prompt:{big:'❓ + '+c.v+' = '+c.r,text:'빠진 자음은?'},
-      speak:c.r+'를 만들려면 무엇이 빠졌을까?',
-      opts:opts.map(o=>({text:o})),hg:true,answer:opts.indexOf(c.c),say:c.c+'가 빠졌었네!'};});
+      word:c.r,speak:eulreul(c.r)+' 만들려면 무엇이 빠졌을까?',
+      opts:opts.map(o=>({text:o})),hg:true,answer:opts.indexOf(c.c),say:iga(c.c)+' 빠져 있었네!'};});
   if(mid==='s6m5')return shuffle(COMBOS).map(c=>{
     const opts=shuffle([c.r,...pick(COMBOS.filter(x=>x.r!==c.r).map(x=>x.r),2)]);
     return{type:'choice',prompt:{big:c.word.e,text:'「❓'+c.word.w.slice(1)+'」 첫 글자를 조립! ('+c.c+' + '+c.v+')'},
-      speak:c.word.w+'의 첫 글자를 만들어 줘! '+c.c+' 더하기 '+c.v+'!',
+      word:c.word.w,speak:c.word.w+'의 첫 글자를 만들어 줘!',
       opts:opts.map(o=>({text:o})),hg:true,answer:opts.indexOf(c.r),say:c.r+'! '+c.word.w+' 완성!'};});
   /* --- stage 7 --- */
   if(mid==='s7m1')return pick(BATCHIM,5).map(b=>{
     const opts=shuffle(b.o);
     return{type:'choice',prompt:{big:b.e,text:'「'+b.w+'」 글자는?'},
-      speak:b.w+'! '+b.w+'! 받침이 있는 글자를 찾아 줘!',
-      opts:opts.map(o=>({text:o})),hg:true,answer:opts.indexOf(b.w),say:b.w+'! 받침 찾기 성공!'};});
+      word:b.w,speak:'받침이 있는 글자, '+eulreul(b.w)+' 찾아 줘!',
+      opts:opts.map(o=>({text:o})),hg:true,answer:opts.indexOf(b.w),say:b.w+'! 받침을 잘 찾았어!'};});
   if(mid==='s7m2'){
     const mix=shuffle([...pick(BATCHIM,3).map(b=>({w:b.w,e:b.e,yes:true})),
                        ...pick(NOBAT,2).map(b=>({w:b.w,e:b.e,yes:false}))]);
@@ -830,27 +920,27 @@ function genQuestions(mid,tk){
       const opts=m.yes?['받침 있다!','받침 없다!']:['받침 없다!','받침 있다!'];
       const so=shuffle(opts.map((t,i)=>({t,ok:i===0})));
       return{type:'choice',prompt:{big:m.e,text:'「'+m.w+'」 받침이 있을까 없을까?'},
-        speak:m.w+'! 받침이 있을까, 없을까?',
+        word:m.w,speak:'받침이 있을까, 없을까?',
         opts:so.map(o=>({text:o.t})),answer:so.findIndex(o=>o.ok),
-        say:m.w+'는 받침이 '+(m.yes?'있어!':'없어!')};});}
+        say:eunneun(m.w)+' 받침이 '+(m.yes?'있어!':'없어!')};});}
   if(mid==='s7m3')return pick(BATCHIM,5).map(b=>{
     const pool=['ㅁ','ㄴ','ㄹ','ㅇ'].filter(x=>x!==b.b);
     const opts=shuffle([b.b,...pick(pool,2)]);
     return{type:'choice',prompt:{big:b.base+' + ❓ = '+b.w,text:'빠진 받침은?'},
-      speak:b.base+'에 무엇을 붙이면 '+b.w+'가 될까?',
-      opts:opts.map(o=>({text:o})),hg:true,answer:opts.indexOf(b.b),say:b.b+' 받침! '+b.w+' 완성!'};});
+      word:b.w,speak:b.base+'에 무엇을 붙이면 '+iga(b.w)+' 될까?',
+      opts:opts.map(o=>({text:o})),hg:true,answer:opts.indexOf(b.b),say:'딩동댕! '+b.w+' 완성!'};});
   if(mid==='s7m4')return pick(BATCHIM,5).map(b=>{
     const opts=shuffle(b.o);
     return{type:'choice',prompt:{big:'🔊',text:'소리를 듣고 글자를 찾아 줘!'},
-      speak:b.w+'! '+b.w+'!',
-      opts:opts.map(o=>({text:o})),hg:true,answer:opts.indexOf(b.w),say:b.w+'! 귀가 밝구나!'};});
+      word:b.w,speak:'잘 듣고 찾아 줘!',
+      opts:opts.map(o=>({text:o})),hg:true,answer:opts.indexOf(b.w),say:b.w+'! 귀가 참 밝구나!'};});
   if(mid==='s7m5'){const qs=[];
     for(let i=0;i<5;i++){
       const y=BATCHIM[i%BATCHIM.length];const ns=pick(NOBAT,2);
       const opts=shuffle([{w:y.w,e:y.e,ok:true},...ns.map(n=>({w:n.w,e:n.e,ok:false}))]);
       qs.push({type:'choice',prompt:{text:'받침이 있는 낱말을 찾아 줘!'},
         speak:'받침이 콩 하고 붙어 있는 낱말은 어느 것일까?',
-        opts:opts.map(o=>({emoji:o.e,text:o.w})),answer:opts.findIndex(o=>o.ok),say:y.w+'! 받침 발견!'});}
+        opts:opts.map(o=>({emoji:o.e,text:o.w})),answer:opts.findIndex(o=>o.ok),say:y.w+'! 받침을 찾았어!'});}
     return qs;}
   /* --- stage 8 --- */
   if(mid==='s8m1')return T.sentences.map(s=>({type:'sentence',words:s.s,emoji:s.e,
@@ -859,13 +949,13 @@ function genQuestions(mid,tk){
     const wrong=pick(T.sentences.filter(x=>x.e!==s.e),2);
     const opts=shuffle([s,...wrong]);
     return{type:'choice',prompt:{text:'「'+s.s.join(' ')+'」 맞는 그림은?'},
-      speak:s.s.join(' ')+'! 맞는 그림을 찾아 줘!',
-      opts:opts.map(o=>({emoji:o.e})),answer:opts.indexOf(s),say:'문장을 읽었구나! 최고!'};});
+      speak:s.s.join(' ')+'! 이 문장에 맞는 그림을 찾아 줘!',
+      opts:opts.map(o=>({emoji:o.e})),answer:opts.indexOf(s),say:'문장을 잘 읽었구나! 최고야!'};});
   if(mid==='s8m3')return shuffle(T.sentences).map(s=>{
     const mids=T.sentences.map(x=>x.s[1]);
     const opts=shuffle([s.s[1],...pick(mids.filter(m=>m!==s.s[1]),2)]);
     return{type:'choice',prompt:{big:s.e,text:s.s[0]+' ❓ '+s.s[2]},
-      speak:s.s[0]+', 무엇, '+s.s[2]+'! 빈칸에 들어갈 말은?',
+      speak:s.s[0]+', 무엇, '+s.s[2]+'! 빈칸에 들어갈 말을 찾아 줘!',
       opts:opts.map(o=>({text:o})),answer:opts.indexOf(s.s[1]),say:s.s.join(' ')+'!'};});
   if(mid==='s8m4')return shuffle(T.sentences).map(s=>{
     const right=s.s.join(' ');
@@ -873,14 +963,14 @@ function genQuestions(mid,tk){
     const opts=shuffle([{t:right,ok:true},{t:wrongArr.join(' '),ok:false}]);
     return{type:'choice',prompt:{big:s.e,text:'바른 문장은 어느 것일까?'},
       speak:'두 문장 중에 바른 문장을 찾아 줘!',
-      opts:opts.map(o=>({text:o.t})),answer:opts.findIndex(o=>o.ok),say:right+'! 바른 문장!'};});
+      opts:opts.map(o=>({text:o.t})),answer:opts.findIndex(o=>o.ok),say:right+'! 바른 문장이야!'};});
   if(mid==='s8m5')return shuffle(T.sentences).map(s=>{
     const subj=s.s[0].replace(/[가이]$/,'');
     const wrong=pick(W.filter(x=>x.w!==subj),2);
     const opts=shuffle([{w:subj,e:s.e},...wrong]);
-    return{type:'choice',prompt:{text:s.s[1]+' '+s.s[2]+'! 누구일까요?'},
-      speak:s.s[1]+' '+s.s[2]+'! 누구일까요?',
-      opts:opts.map(o=>({emoji:o.e,text:o.w})),answer:opts.findIndex(o=>o.w===subj),say:subj+'! 정답!'};});
+    return{type:'choice',prompt:{text:s.s[1]+' '+s.s[2]+'! 누구일까?'},
+      speak:s.s[1]+' '+s.s[2]+'! 누구일까?',
+      opts:opts.map(o=>({emoji:o.e,text:o.w})),answer:opts.findIndex(o=>o.w===subj),say:subj+'! 정답이야!'};});
   /* --- stage 9 --- */
   if(mid==='s9m1')return[{type:'story',story:T.stories[0]}];
   if(mid==='s9m2')return[{type:'story',story:T.stories[1]}];
@@ -888,6 +978,7 @@ function genQuestions(mid,tk){
   if(mid==='s9m4')return[{type:'story',story:T.stories[3]}];
   return[];
 }
+
 /* ---------------- CHALLENGE WORD SETS ---------------- */
 function challengeItems(stageId,tk){
   const T=THEMES[tk];
@@ -971,8 +1062,8 @@ function rHome(){
    </div>
    <div class="guide">
      <div class="facewrap">
-       <div class="face${asleep?' sleep':''}" id="gFace">${asleep?'😴':guideF.e}${asleep?'<span class="zzz">💤</span>':''}</div>
        ${nextEggWidget(true)}
+       <div class="face${asleep?' sleep':''}" id="gFace">${asleep?'😴':guideF.e}${asleep?'<span class="zzz">💤</span>':''}</div>
      </div>
      <div class="bubble" id="gBubble"><b>${guideF.n}</b>: ${greet}</div>
    </div>
@@ -1039,8 +1130,8 @@ function rStage(){
      <span class="chip">⭐ ${cp.stars}</span></div>
    <div class="guide">
      <div class="facewrap">
-       <div class="face" id="gFace">${gf.e}</div>
        ${nextEggWidget(true)}
+       <div class="face" id="gFace">${gf.e}</div>
      </div>
      <div class="bubble" id="gBubble"><b>${gf.n}</b>: ${st.name}에 온 걸 환영해! ${st.desc}!</div></div>
    <div id="mlist"></div>`;
@@ -1140,14 +1231,16 @@ function promptBox(q){
     ${pic?pic:(q.prompt.text?`<div class="qtx">${q.prompt.text}</div>`:'')}
     <button class="speaker" id="spk">🔊</button></div>`;
 }
-/* 자동 안내는 큐로 이어 말함(칭찬을 끊지 않음). 🔊 버튼은 즉시(끊고) 말함 */
-function speakQ(t){utter(t,1.0,0.88,false);}
-function bindSpk(q){const b=$('#spk');if(b)b.onclick=()=>speak(q.speak);bindPicto();speakQ(q.speak);}
+function speakPrompt(q,cancel){
+  if(q.word){speakW(q.word,cancel);if(q.speak)speakQ(q.speak);}
+  else if(cancel)speak(q.speak);else speakQ(q.speak);
+}
+function bindSpk(q){const b=$('#spk');if(b)b.onclick=()=>speakPrompt(q,true);bindPicto();speakPrompt(q,false);}
 function miniOK(q){
   const g=state.game;if(g.lock)return false;g.lock=true;g.streak++;sfxGood();
   const combo=(g.streak>=3&&g.streak%3===0);
   if(combo)confetti();
-  const praise=randPraise()+(combo?' 연속 '+g.streak+'개! 불꽃이다!':'');
+  const praise=combo?('우와! '+kNum(g.streak)+' 개나 연속으로 맞혔어! 정말 대단해!'):randPraise();
   if(q.say){speak(q.say);speakAs(gfi(),praise,false);}  /* 낱말 또렷하게 → 캐릭터 칭찬 이어서 */
   else speakAs(gfi(),praise,true);
   g.comboWait=combo;
@@ -1257,7 +1350,7 @@ function rFeed(q){
   app.innerHTML=gameHeader()+promptBox(q)+`
    <div class="scene mealbg">${drifts(['🍃','🍃'])}
      <div class="friendbig" id="fb">${gf.e}</div>
-     <div class="hintline">${gf.n}가 배고파! 정답을 골라 냠냠 🍽️</div>
+     <div class="hintline">${iga(gf.n)} 배고파! 정답을 골라 냠냠 🍽️</div>
      <div class="foods${q.opts.length===2?' two':''}" id="og"></div></div>`;
   bindQuit();
   const og=$('#og');const fb=$('#fb');
@@ -1297,7 +1390,7 @@ function rMeet(q){
       if(g.meetTaps>=2)$('#hideBtn').style.visibility='visible';
     };
     $('#hideBtn').onclick=()=>{sfxClick();g.flashDone=true;render();};
-    speakQ(q.speak+'! 글자를 눌러 봐!');
+    speakQ('잘 봐! 글자를 콕콕 누르면 소리가 나!');
     return;
   }
   app.innerHTML=gameHeader()+`
@@ -1788,8 +1881,7 @@ function rGate(){
     else if(k==='✔'){
       if(parseInt(g.val,10)===g.a*g.b){
         sfxGood();
-        if(DB.pin){state.gate=null;state.pinVal='';go('pin');}
-        else{state.gate=null;go('admin');}
+        state.gate=null;go('admin'); /* 곱셈만 통과하면 진입 (비밀번호 단계 제거) */
         return;
       }
       sfxBad();gv.classList.add('err');setTimeout(()=>gv.classList.remove('err'),450);
