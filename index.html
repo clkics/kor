@@ -309,6 +309,36 @@ h2{font-size:23px;margin-bottom:10px;}
 .picto{display:block;margin:6px auto 2px;height:76px;max-width:96%;cursor:pointer;}
 .picto.mini{height:36px;margin:2px auto;cursor:inherit;}
 .picto.gig{animation:gigA .5s ease;}
+
+/* ===== 정답 쇼케이스 ===== */
+.gone{opacity:0 !important;transform:scale(.4) !important;transition:all .45s ease;animation:none !important;pointer-events:none;}
+.ansShow{position:absolute;left:50%;top:44%;transform:translate(-50%,-50%);
+  background:rgba(255,255,255,.97);border:4px solid var(--sun);border-radius:24px;
+  padding:14px 24px;text-align:center;z-index:6;box-shadow:0 10px 26px rgba(0,0,0,.16);
+  animation:ansIn .35s ease;}
+@keyframes ansIn{0%{transform:translate(-50%,-50%) scale(.55);opacity:0;}100%{transform:translate(-50%,-50%) scale(1);opacity:1;}}
+.ansShow .em{font-size:46px;display:block;line-height:1.15;}
+.sylrow{display:flex;gap:8px;justify-content:center;margin-top:2px;}
+.syl{font-size:54px;font-weight:800;color:#CFC8DD;transition:color .18s,transform .18s;}
+.syl.lit{color:var(--ink);transform:scale(1.25);}
+.syl.on{color:var(--ink);}
+.syl.pulse{animation:sylPulse .5s ease;}
+@keyframes sylPulse{0%,100%{transform:scale(1);}50%{transform:scale(1.18);}}
+
+/* ===== 미션 카드: 미완(생동) vs 완료(차분한 도장) ===== */
+.mcard{position:relative;}
+.mcard.mnew{background:#FFFDF5;border-color:var(--sun);box-shadow:0 5px 0 var(--sun);}
+.mcard.mnew .se{animation:mWiggle 2.2s ease-in-out infinite;display:inline-block;}
+@keyframes mWiggle{0%,100%{transform:rotate(0) scale(1);}12%{transform:rotate(-8deg) scale(1.12);}24%{transform:rotate(7deg) scale(1.08);}36%{transform:rotate(0) scale(1);}}
+.mcard .mstars{font-size:17px;letter-spacing:2px;line-height:1.2;}
+.mcard.mnew .mstars{color:#C9BFA8;}
+.mcard.mdone{background:var(--mint-soft);border-color:var(--mint);box-shadow:0 4px 0 var(--mint);opacity:.92;}
+.mcard.mdone .sn{color:var(--ink-soft);}
+.mnewchip{position:absolute;top:-9px;right:44px;background:var(--melon);color:#fff;font-size:12px;font-weight:800;
+  padding:3px 9px;border-radius:10px;box-shadow:0 2px 0 rgba(0,0,0,.12);animation:chipPulse 1.6s ease-in-out infinite;}
+@keyframes chipPulse{0%,100%{transform:scale(1);}50%{transform:scale(1.1);}}
+.mstamp{position:absolute;top:-8px;right:44px;background:#fff;border:2.5px solid var(--mint-deep);color:var(--mint-deep);
+  font-size:12px;font-weight:800;padding:2px 8px;border-radius:10px;transform:rotate(-8deg);}
 </style>
 </head>
 <body>
@@ -318,7 +348,7 @@ h2{font-size:23px;margin-bottom:10px;}
 <div id="app"></div>
 <script>
 /* ============================================================
-   한글 친구들 v5.1 — 부모 관문: 곱셈만(비밀번호 단계 제거)
+   한글 친구들 v5.4 — 미션 카드 완료/미완 구분 강화(빈 별칸·새 모험 칩 vs 성공 도장)·말하기 도전 피드백 끊김 해결
    ============================================================ */
 /* ---------------- DATA: themes ---------------- */
 const THEMES={
@@ -402,13 +432,13 @@ const THEMES={
 /* ---------------- DATA: friends / rewards ---------------- */
 const FRIENDS=[
  {n:'쭈쭈',vp:{p:1.5,r:1.08},e:'🐭',a:'쥐',pat:'radial-gradient(#9aa5b1 22%,transparent 23%) 0 0/16px 16px,radial-gradient(#9aa5b1 22%,transparent 23%) 8px 8px/16px 16px',lines:['안녕! 나는 쭈쭈야!','오늘도 같이 놀자!','너는 정말 대단해!']},
- {n:'음머',vp:{p:0.65,r:0.82},e:'🐮',a:'소',pat:'radial-gradient(#4a4a4a 30%,transparent 31%) 2px 4px/22px 20px',lines:['음머~ 반가워!','천천히 해도 괜찮아!','우리 같이 힘내자!']},
- {n:'아웅이',vp:{p:0.8,r:0.95},e:'🐯',a:'호랑이',pat:'repeating-linear-gradient(60deg,#ff9f43 0 6px,transparent 6px 16px)',lines:['어흥! 힘내라 힘!','너는 용감한 친구야!','으르렁~ 멋진걸!']},
+ {n:'음머',vp:{p:0.65,r:0.82},e:'🐮',a:'소',pat:'radial-gradient(#4a4a4a 30%,transparent 31%) 2px 4px/22px 20px',lines:['음머, 반가워!','천천히 해도 괜찮아!','우리 같이 힘내자!']},
+ {n:'아웅이',vp:{p:0.8,r:0.95},e:'🐯',a:'호랑이',pat:'repeating-linear-gradient(60deg,#ff9f43 0 6px,transparent 6px 16px)',lines:['어흥! 힘내라 힘!','너는 용감한 친구야!','으르렁, 멋진걸!']},
  {n:'깡총이',vp:{p:1.42,r:1.12},e:'🐰',a:'토끼',pat:'radial-gradient(#ff9ecb 26%,transparent 27%) 0 0/18px 18px',lines:['깡총깡총! 신난다!','같이 뛰어 볼까?','아삭아삭 참 잘한다!']},
- {n:'용용이',vp:{p:0.72,r:0.9},e:'🐲',a:'용',pat:'radial-gradient(#57c99b 30%,transparent 31%) 0 0/14px 12px,radial-gradient(#57c99b 30%,transparent 31%) 7px 6px/14px 12px',lines:['용용~ 하늘을 날자!','너는 최고야!','구름 위에서 응원할게!']},
- {n:'스르륵',vp:{p:1.15,r:0.85},e:'🐍',a:'뱀',pat:'repeating-linear-gradient(45deg,#f5d76e 0 7px,transparent 7px 14px),repeating-linear-gradient(-45deg,#f5d76e 0 7px,transparent 7px 14px)',lines:['스르륵~ 안녕!','살금살금 글자를 찾자!','쉿, 집중하면 다 보여!']},
+ {n:'용용이',vp:{p:0.72,r:0.9},e:'🐲',a:'용',pat:'radial-gradient(#57c99b 30%,transparent 31%) 0 0/14px 12px,radial-gradient(#57c99b 30%,transparent 31%) 7px 6px/14px 12px',lines:['용용, 하늘을 날자!','너는 최고야!','구름 위에서 응원할게!']},
+ {n:'스르륵',vp:{p:1.15,r:0.85},e:'🐍',a:'뱀',pat:'repeating-linear-gradient(45deg,#f5d76e 0 7px,transparent 7px 14px),repeating-linear-gradient(-45deg,#f5d76e 0 7px,transparent 7px 14px)',lines:['스르륵, 안녕!','살금살금 글자를 찾자!','쉿, 집중하면 다 보여!']},
  {n:'히힝이',vp:{p:1.0,r:1.06},e:'🐴',a:'말',pat:'repeating-linear-gradient(90deg,#b98a5e 0 5px,transparent 5px 13px)',lines:['히힝! 달려 보자!','다그닥 다그닥!','바람처럼 씽씽!']},
- {n:'메에',vp:{p:1.3,r:0.92},e:'🐑',a:'양',pat:'radial-gradient(#e8e0d0 34%,transparent 35%) 0 0/13px 13px,radial-gradient(#e8e0d0 34%,transparent 35%) 6px 6px/13px 13px',lines:['메에~ 포근하지?','잘하고 있어!','구름 이불 덮고 쉬어 가!']},
+ {n:'메에',vp:{p:1.3,r:0.92},e:'🐑',a:'양',pat:'radial-gradient(#e8e0d0 34%,transparent 35%) 0 0/13px 13px,radial-gradient(#e8e0d0 34%,transparent 35%) 6px 6px/13px 13px',lines:['메에, 포근하지?','잘하고 있어!','구름 이불 덮고 쉬어 가!']},
  {n:'까꿍이',vp:{p:1.45,r:1.15},e:'🐵',a:'원숭이',pat:'radial-gradient(ellipse,#c98f4e 30%,transparent 31%) 0 0/20px 12px',lines:['까꿍! 나 잡아 봐라!','재밌게 놀자!','바나나만큼 달콤한 하루!']},
  {n:'꼬꼬',vp:{p:1.35,r:1.02},e:'🐔',a:'닭',pat:'repeating-linear-gradient(0deg,#ff6f61 0 5px,transparent 5px 14px)',lines:['꼬끼오! 아침이야!','꼬꼬댁, 참 잘했어!','알도 쏙쏙, 글자도 쏙쏙!']},
  {n:'멍멍이',vp:{p:1.05,r:1.0},e:'🐶',a:'개',pat:'radial-gradient(#d3a06a 24%,transparent 25%) 0 0/17px 17px,radial-gradient(#d3a06a 16%,transparent 17%) 9px 9px/17px 17px',lines:['멍멍! 반가워!','내가 옆에서 응원할게!','꼬리 살랑살랑, 기분 최고!']},
@@ -444,7 +474,7 @@ const STAGES=[
  {id:9,name:'이야기 나라',emoji:'📖',guide:8,desc:'혼자서 책을 읽어요',missions:['s9m1','s9m2','s9m3','s9m4']}];
 const MISSIONS={
  s1m1:{name:'소리 듣고 냠냠',eng:'feed',gi:'🍽️'},s1m2:{name:'박수 풍선 팡팡',eng:'pop',gi:'🎈'},
- s2m1:{name:'박수 풍선',eng:'pop',gi:'🎈'},s2m2:{name:'배고픈 친구',eng:'feed',gi:'🍽️'},s2m3:{name:'글자 수 두더지',eng:'mole',gi:'🔨'},
+ s2m1:{name:'박수 소리 낚시',eng:'fish',gi:'🎣'},s2m2:{name:'배고픈 친구',eng:'feed',gi:'🍽️'},s2m3:{name:'글자 수 두더지',eng:'mole',gi:'🔨'},
  s3m1:{name:'숨은 글자 두더지',eng:'mole',gi:'🔨'},s3m2:{name:'첫 글자 낚시',eng:'fish',gi:'🎣'},s3m3:{name:'끝 글자 풍선',eng:'pop',gi:'🎈'},s3m4:{name:'다른 낱말 냠냠',eng:'feed',gi:'🍽️'},
  s4m1:{name:'모음 풍선 팡팡',eng:'pop',gi:'🎈'},s4m2:{name:'소리 두더지',eng:'mole',gi:'🔨'},s4m3:{name:'모음 낚시',eng:'fish',gi:'🎣'},s4m4:{name:'반짝 기억 놀이',eng:'meet',gi:'✨'},s4m5:{name:'모음 냠냠',eng:'feed',gi:'🍽️'},
  s5m1:{name:'가나다 두더지',eng:'mole',gi:'🔨'},s5m2:{name:'소리 풍선',eng:'pop',gi:'🎈'},s5m3:{name:'글자 낚시',eng:'fish',gi:'🎣'},s5m4:{name:'반짝 기억 놀이',eng:'meet',gi:'✨'},s5m5:{name:'소리 보물 상자',eng:'crack',gi:'🎁'},
@@ -544,11 +574,11 @@ function spCancel(){
   SP_BUSY=false;
 }
 function spClean(t){return String(t).replace(/[\u{1F000}-\u{1FAFF}\u{2600}-\u{27BF}\u{FE0F}]/gu,'').replace(/\s+/g,' ').trim();}
-function spSay(t,fi,pitch,rate,cancel){
-  if(!state.sound||!t)return;
-  t=spClean(t);if(!t)return;
+function spSay(t,fi,pitch,rate,cancel,cb,done){
+  if(!state.sound||!t){if(cb)try{cb()}catch(e){};if(done)try{done()}catch(e){};return;}
+  t=spClean(t);if(!t){if(done)try{done()}catch(e){};return;}
   if(cancel)spCancel();
-  SPQ.push({t,fi,pitch,rate});
+  SPQ.push({t,fi,pitch,rate,cb,done});
   if(!SP_BUSY){SP_BUSY=true;spNext(cancel?80:0);}
 }
 function spNext(delay){
@@ -556,14 +586,16 @@ function spNext(delay){
   SP_T=setTimeout(()=>{
     const it=SPQ.shift();
     if(!it){SP_BUSY=false;return;}
+    if(it.cb)try{it.cb();}catch(e){}
+    const fin=()=>{if(it.done){const d=it.done;it.done=null;try{d();}catch(e){}}};
     const key=fnv(it.fi+'|'+it.t);
     if(AUDIO_PACK&&AUDIO_PACK[key]){
       try{
-        const a=new Audio('audio/'+key+'.mp3');SP_AUDIO=a;
-        a.onended=a.onerror=()=>{SP_AUDIO=null;spNext(80);};
-        a.play().catch(()=>{SP_AUDIO=null;spNext(0);});
-        SP_G=setTimeout(()=>{if(SP_AUDIO===a){try{a.pause();}catch(e){}SP_AUDIO=null;spNext(0);}},15000);
-      }catch(e){SP_AUDIO=null;spNext(0);}
+        const a=new Audio('audio/'+key+'.mp3');SP_AUDIO=a;a.volume=1;
+        a.onended=a.onerror=()=>{SP_AUDIO=null;fin();spNext(80);};
+        a.play().catch(()=>{SP_AUDIO=null;fin();spNext(0);});
+        SP_G=setTimeout(()=>{if(SP_AUDIO===a){try{a.pause();}catch(e){}SP_AUDIO=null;fin();spNext(0);}},15000);
+      }catch(e){SP_AUDIO=null;fin();spNext(0);}
     }else{
       try{
         const u=new SpeechSynthesisUtterance(it.t);
@@ -571,10 +603,10 @@ function spNext(delay){
         if(v){u.voice=v;u.lang=v.lang;}else{u.lang='ko-KR';}
         u.pitch=it.pitch;u.rate=it.rate;
         UTTER_KEEP.push(u);if(UTTER_KEEP.length>12)UTTER_KEEP.shift();
-        u.onend=u.onerror=()=>{const i=UTTER_KEEP.indexOf(u);if(i>=0)UTTER_KEEP.splice(i,1);spNext(80);};
+        u.onend=u.onerror=()=>{const i=UTTER_KEEP.indexOf(u);if(i>=0)UTTER_KEEP.splice(i,1);fin();spNext(80);};
         speechSynthesis.speak(u);
-        SP_G=setTimeout(()=>{spNext(0);},12000);
-      }catch(e){spNext(0);}
+        SP_G=setTimeout(()=>{fin();spNext(0);},12000);
+      }catch(e){fin();spNext(0);}
     }
   },delay||0);
 }
@@ -597,9 +629,6 @@ function collectSpeechLines(){
   /* 캐릭터 목소리(12마리 각각) */
   FRIENDS.forEach((f,i)=>{
     (f.lines||[]).forEach(l=>add(i,l));
-    PRAISES.forEach(p=>{add(i,p);add(i,'딩동댕! '+p);});
-    OOPSES.forEach(o=>add(i,o));
-    [3,6,9].forEach(n=>add(i,'우와! '+kNum(n)+' 개나 연속으로 맞혔어! 정말 대단해!'));
     add(i,'좋은 아침! 오늘도 모험 가자!');
     add(i,'어서 와! 오늘은 어디로 모험 갈까?');
     add(i,'반짝반짝 저녁이야! 자기 전에 살짝 모험 갈까?');
@@ -609,17 +638,33 @@ function collectSpeechLines(){
     add(i,'오늘 새 모험을 다 했어! 나는 이제 잘래. 그런데 복습은 더 할 수 있어! 별도 받을 수 있다구! 내일 또 만나자!');
     STAGES.forEach(st=>add(i,st.name+'에 온 걸 환영해!'));
     add(i,'미션을 모두 깨면 도전할 수 있어!');
-    add(i,'음, 기차 칸 순서가 좀 이상한걸? 다시 연결해 보자!');
-    add(i,'칙칙폭폭! 기차 출발!');
     if(typeof PICTO!=='undefined')Object.values(PICTO).forEach(p=>add(i,p.h));
   });
   add(0,'안녕! 이름을 눌러 줘!');
+  OOPSES.forEach(o=>add(-1,o));
+  ['딩동댕!','칙칙폭폭! 기차 출발!','음, 순서가 좀 이상한걸? 다시 연결해 보자!',
+   '딩동댕! 정답이야!','아깝다! 한 번 더 해 보자!','괜찮아! 이번엔 꼭 될 거야!','힘내! 다시 해 보자!',
+   '이번에는 귀 쫑긋 도전이야! 소리를 듣고 맞는 글자를 찾아 봐!',
+   '대단해! 모든 도전을 해냈어!'].forEach(t=>add(-1,t));
+  /* 도전 안내(낱말·글자별) + 승리 멘트 */
+  for(const tk of Object.keys(THEMES))for(const st of STAGES){
+    earPool(st.id,tk).forEach(p=>{
+      add(-1,'말하기 도전! '+p.word+'! 크게 말해 봐!');
+      add(-1,p.word+'! 어디 있을까?');
+      add(-1,p.word);
+    });
+  }
+  STAGES.forEach(st=>{const nx=STAGES.find(s=>s.id===st.id+1);
+    add(-1,'도전 성공! 별 두 개! '+(nx?nx.name+'이 열렸어!':'대단해! 모든 도전을 해냈어!'));});
   /* 내레이터(-1: 문제 안내·정답 문장), 강조 낱말(-2) — 랜덤 생성 커버 위해 반복 수집 */
   for(const tk of Object.keys(THEMES))for(const mid of Object.keys(MISSIONS)){
     for(let r=0;r<30;r++){
       genQuestions(mid,tk).forEach(q=>{
         add(-1,q.speak);add(-1,q.say);
         if(q.word){add(-2,q.word);}
+        const aw=ansWordOf(q);
+        if(aw){aw.split('').forEach(ch=>add(-2,ch));add(-2,aw);
+          const r=sayRestOf(q,aw);if(r)add(-1,r);}
         if(q.story){q.story.pages.forEach(pg=>add(-1,pg.t));add(-1,q.story.q.t);}
       });
     }
@@ -640,6 +685,8 @@ function tone(f,d,delay,type,g){
     o.start(s);o.stop(s+d);}catch(e){}
 }
 function sfxGood(){tone(660,.12);tone(880,.2,.1);}
+function sfxCombo(){tone(523,.14);tone(659,.14,.12);tone(784,.14,.24);tone(1047,.3,.36);}
+function sfxClaps(n){for(let i=0;i<n;i++)tone(420,.08,i*0.4,'square',.15);}
 function sfxBad(){tone(170,.22,0,'square',.06);}
 function sfxWin(){[523,659,784,1046].forEach((f,i)=>tone(f,.22,i*.12));}
 function sfxClick(){tone(500,.06,0,'triangle',.08);}
@@ -665,7 +712,7 @@ function go(sc){state.screen=sc;render();}
 function today(){return new Date().toISOString().slice(0,10);}
 const PRAISES=['참 잘했어요!','우와, 최고야!','정말 대단해!','멋지다 멋져!','짝짝짝, 훌륭해!','딩동댕동!','야호, 성공이야!','반짝반짝 빛나는 실력이야!','오늘 정말 잘하는걸!','최고 최고!'];
 function randPraise(){return PRAISES[Math.floor(Math.random()*PRAISES.length)];}
-const OOPSES=['앗, 요건 아닌가 봐!','으잉? 다시 한번!','아깝다! 또 해 보자!','요게 아니네. 다시 찾아보자!','살짝 아쉬워! 한 번 더!'];
+const OOPSES=['괜찮아! 다시 한번!','음, 다시 골라 보자!','조금 아쉬워! 한 번 더!','다시 해 볼까?'];
 function randOops(){return OOPSES[Math.floor(Math.random()*OOPSES.length)];}
 const CHO=['ㄱ','ㄲ','ㄴ','ㄷ','ㄸ','ㄹ','ㅁ','ㅂ','ㅃ','ㅅ','ㅆ','ㅇ','ㅈ','ㅉ','ㅊ','ㅋ','ㅌ','ㅍ','ㅎ'];
 const JUNG=['ㅏ','ㅐ','ㅑ','ㅒ','ㅓ','ㅔ','ㅕ','ㅖ','ㅗ','ㅘ','ㅙ','ㅚ','ㅛ','ㅜ','ㅝ','ㅞ','ㅟ','ㅠ','ㅡ','ㅢ','ㅣ'];
@@ -758,13 +805,17 @@ function genQuestions(mid,tk){
       opts:opts.map(n=>({text:'👏'.repeat(n),sub:kNum(n)+' 번'})),
       answer:opts.indexOf(w.w.length),say:eunneun(w.w)+' '+kNum(w.w.length)+' 글자야!'};});
   /* --- stage 2 --- */
-  if(mid==='s2m1')return pick(W.filter(w=>w.w.length<=3),5).map(w=>{
-    const set=new Set([w.w.length]);while(set.size<3)set.add(1+Math.floor(Math.random()*4));
-    const opts=shuffle([...set]);
-    return{type:'choice',prompt:{big:w.e,text:w.w},
-      word:w.w,speak:'박수를 몇 번 칠까? '+w.w.split('').join(', '),
-      opts:opts.map(n=>({text:'👏'.repeat(n),sub:kNum(n)+' 번'})),
-      answer:opts.indexOf(w.w.length),say:eunneun(w.w)+' '+kNum(w.w.length)+' 글자야!'};});
+  if(mid==='s2m1'){const qs=[];
+    for(const w of shuffle(W)){if(qs.length>=5)break;
+      const others=pick(W.filter(x=>x.w.length!==w.w.length),2);
+      if(others.length<2)continue;
+      const opts=shuffle([w,...others]);
+      qs.push({type:'choice',prompt:{big:'👏'.repeat(w.w.length),text:'박수 수만큼 긴 낱말은?'},
+        claps:w.w.length,
+        speak:'박수를 잘 들어 봐! '+kNum(w.w.length)+' 번! '+kNum(w.w.length)+' 글자 낱말을 찾아 줘!',
+        opts:opts.map(o=>({emoji:o.e,text:o.w})),answer:opts.indexOf(w),
+        say:eunneun(w.w)+' '+kNum(w.w.length)+' 글자야!'});}
+    return qs;}
   if(mid==='s2m2'){const qs=[];
     for(const a of shuffle(W)){if(qs.length>=5)break;
       const bs=W.filter(x=>x.w.length<a.w.length);if(!bs.length)continue;
@@ -1009,7 +1060,6 @@ function render(){
   if(s==='chalWin')return rChalWin();
   if(s==='collection')return rCollection();
   if(s==='gate')return rGate();
-  if(s==='pin')return rPin();
   if(s==='admin')return rAdmin();
 }
 /* ---------------- PROFILES ---------------- */
@@ -1139,10 +1189,12 @@ function rStage(){
   st.missions.forEach(mid=>{
     const M=MISSIONS[mid];const done=cp.done.includes(mid);
     const rv=cp.reviews[mid]||0;
-    const d=document.createElement('div');d.className='stage';
+    const d=document.createElement('div');d.className='stage mcard '+(done?'mdone':'mnew');
     d.innerHTML=`<span class="se">${done?'🌟':M.gi}</span>
       <div class="fill"><div class="sn">${M.name}</div>
-      <div class="sd">${done?('복습 '+rv+'/3 · 복습해도 ⭐ 하나!'):'처음 성공하면 ⭐⭐⭐!'}</div></div>
+      <div class="mstars">${done?'⭐⭐⭐':'☆☆☆'}</div>
+      <div class="sd">${done?('참 잘했어요! · 복습 '+rv+'/3'):'별이 비어 있어! 채워 볼까?'}</div></div>
+      ${done?'<span class="mstamp">성공!</span>':'<span class="mnewchip">새 모험!</span>'}
       <span class="stagebadge">${done?'🔁':'▶️'}</span>`;
     d.onclick=()=>{sfxClick();startMission(mid);};
     ml.appendChild(d);
@@ -1235,27 +1287,75 @@ function speakPrompt(q,cancel){
   if(q.word){speakW(q.word,cancel);if(q.speak)speakQ(q.speak);}
   else if(cancel)speak(q.speak);else speakQ(q.speak);
 }
-function bindSpk(q){const b=$('#spk');if(b)b.onclick=()=>speakPrompt(q,true);bindPicto();speakPrompt(q,false);}
+function bindSpk(q){const b=$('#spk');if(b)b.onclick=()=>{if(q.claps)sfxClaps(q.claps);speakPrompt(q,true);};bindPicto();if(q.claps)sfxClaps(q.claps);speakPrompt(q,false);}
 function miniOK(q){
-  const g=state.game;if(g.lock)return false;g.lock=true;g.streak++;sfxGood();
+  const g=state.game;if(g.lock)return false;g.lock=true;g.streak++;
   const combo=(g.streak>=3&&g.streak%3===0);
-  if(combo)confetti();
-  const praise=combo?('우와! '+kNum(g.streak)+' 개나 연속으로 맞혔어! 정말 대단해!'):randPraise();
-  if(q.say){speak(q.say);speakAs(gfi(),praise,false);}  /* 낱말 또렷하게 → 캐릭터 칭찬 이어서 */
-  else speakAs(gfi(),praise,true);
-  g.comboWait=combo;
+  sfxGood();
+  if(combo){confetti();sfxCombo();}      /* 콤보: 폭죽+축하 멜로디(말 없음) */
+  g.comboWait=combo;                     /* 낱말 발음·설명은 정답 쇼케이스가 담당 */
   return true;
 }
 function miniNO(){
   const g=state.game;if(g.lock)return false;
-  g.streak=0;sfxBad();speakAs(gfi(),randOops(),true);return true;
+  g.streak=0;sfxBad();speak(randOops());return true;
 }
 function miniNext(ms){
   const g=state.game;
-  const extra=800+(g&&g.comboWait?1100:0);
+  const extra=250+(g&&g.comboWait?600:0);
   if(g)g.comboWait=false;
   setTimeout(()=>{const gg=state.game;if(!gg)return;
     gg.i++;gg.lock=false;gg.flashDone=false;gg.meetTaps=0;render();},ms+extra);}
+/* ---- 정답 쇼케이스: 오답은 사라지고, 정답 낱말이 크게 남아 음절별로 빛나며 발음됨 ---- */
+function fadeOthers(og,keep){if(!og)return;[...og.children].forEach(c=>{if(c!==keep)c.classList.add('gone');});}
+function ansWordOf(q){
+  const o=(q.opts&&q.opts[q.answer])||{};
+  if(o.text&&/^[가-힣]{1,4}$/.test(o.text))return o.text;
+  if(q.word&&/^[가-힣]{1,4}$/.test(q.word))return q.word;
+  return null;
+}
+function sayRestOf(q,w){
+  if(!q.say||q.say===w)return null;
+  if(q.say.startsWith(w)){
+    let r=q.say.slice(w.length).replace(/^[!,.?\s]+/,'');
+    r=r.replace(/^(이랑|으로|은|는|이|가|을|를|과|와|도|랑|로)\s+/,''); /* 고아 조사 제거 */
+    return r||null;
+  }
+  return q.say;
+}
+function miniDone(q,keepEl,og){
+  const g=state.game;
+  fadeOthers(og,keepEl);
+  const w=ansWordOf(q);
+  if(!w){if(q.say)speak(q.say);miniNext(1000);return;}
+  const o=(q.opts&&q.opts[q.answer])||{};
+  const scene=document.querySelector('.scene')||app;
+  const box=document.createElement('div');box.className='ansShow';
+  box.innerHTML=(o.emoji?`<span class="em">${o.emoji}</span>`:'')+
+    `<div class="sylrow">${w.split('').map(s=>`<span class="syl">${s}</span>`).join('')}</div>`;
+  scene.appendChild(box);
+  const syls=[...box.querySelectorAll('.syl')];
+  const rest=sayRestOf(q,w);
+  let fin=false;
+  const finish=()=>{if(fin)return;fin=true;if(g)clearTimeout(g.advT);
+    const extra=(g&&g.comboWait)?600:0;if(g)g.comboWait=false;
+    setTimeout(()=>{const gg=state.game;if(!gg)return;
+      gg.i++;gg.lock=false;gg.flashDone=false;gg.meetTaps=0;render();},450+extra);};
+  const light=i=>{syls.forEach((el,j)=>{el.classList.toggle('lit',j===i);if(j<i)el.classList.add('on');});};
+  const lightAll=()=>{syls.forEach(el=>{el.classList.remove('lit');el.classList.add('on','pulse');});};
+  if(!state.sound){ /* 무음 모드: 시각 연출만 */
+    w.split('').forEach((s,i)=>setTimeout(()=>light(i),300+i*450));
+    setTimeout(lightAll,300+w.length*450);
+    setTimeout(finish,900+w.length*450);
+    return;
+  }
+  w.split('').forEach((s,i)=>{
+    spSay(s,-2,1.02,0.6,i===0,()=>light(i),null); /* 음절: 천천히 또박또박 + 하이라이트 동기화 */
+  });
+  spSay(w,-2,1.0,0.85,false,lightAll,rest?null:finish); /* 낱말 전체 한 번 더 */
+  if(rest)spSay(rest,-1,1.0,0.9,false,null,finish);     /* 남은 설명("산으로 끝나!") */
+  if(g)g.advT=setTimeout(finish,12000);                 /* 안전 장치 */
+}
 /* ---- 🎈 풍선 팡팡 ---- */
 const BCOL=['#FFC7D2','#BDE3FF','#FFE9A8','#C9F2CF'];
 function rPop(q){
@@ -1269,7 +1369,7 @@ function rPop(q){
     const d=document.createElement('div');d.className='balloon';
     d.innerHTML=`<div class="bbody" style="background:${BCOL[i%4]};">${optInner(o,q.hg)}</div><div class="str"></div>`;
     d.onclick=()=>{
-      if(i===q.answer){if(!miniOK(q))return;d.classList.add('popped');miniNext(950);}
+      if(i===q.answer){if(!miniOK(q))return;d.classList.add('popped');miniDone(q,d,og);}
       else{if(!miniNO())return;d.classList.remove('boing');void d.offsetWidth;d.classList.add('boing');}
     };
     og.appendChild(d);
@@ -1291,7 +1391,7 @@ function rMole(q){
     m.onclick=()=>{
       if(i===q.answer){if(!miniOK(q))return;
         m.style.animationPlayState='paused';m.classList.add('bonk');
-        m.querySelector('.mf').textContent='💫';miniNext(950);}
+        m.querySelector('.mf').textContent='💫';miniDone(q,h,og);}
       else{if(!miniNO())return;m.classList.remove('duck');void m.offsetWidth;m.classList.add('duck');}
     };
     h.appendChild(m);og.appendChild(h);
@@ -1312,7 +1412,7 @@ function rFish(q){
     f.innerHTML=`<span class="ffish">${FISH[i%4]}</span><div class="fbub">${optInner(o,q.hg)}</div>`;
     f.onclick=()=>{
       if(i===q.answer){if(!miniOK(q))return;
-        f.style.animation='none';void f.offsetWidth;f.classList.add('hooked');miniNext(1000);}
+        f.style.animation='none';void f.offsetWidth;f.classList.add('hooked');miniDone(q,f,og);}
       else{if(!miniNO())return;f.classList.remove('splash');void f.offsetWidth;f.classList.add('splash');}
     };
     og.appendChild(f);
@@ -1337,7 +1437,7 @@ function rCrack(q){
         c.classList.remove('knock');void c.offsetWidth;c.classList.add('knock');sfxClick();
         if(k>=3){if(!miniOK(q))return;
           c.querySelector('.box').textContent=(q.opts[i].emoji||'🌟');
-          c.classList.add('open');miniNext(1100);}
+          c.classList.add('open');miniDone(q,c,og);}
       }else{if(!miniNO())return;c.classList.remove('puff');void c.offsetWidth;c.classList.add('puff');}
     };
     og.appendChild(c);
@@ -1361,7 +1461,7 @@ function rFeed(q){
       if(i===q.answer){if(!miniOK(q))return;
         d.classList.add('eaten');
         setTimeout(()=>{fb.classList.add('chomp');},450);
-        miniNext(1250);}
+        miniDone(q,d,og);}
       else{if(!miniNO())return;
         d.classList.remove('nope');void d.offsetWidth;d.classList.add('nope');
         fb.classList.remove('yuck');void fb.offsetWidth;fb.classList.add('yuck');}
@@ -1408,7 +1508,7 @@ function rMeet(q){
     m.onclick=()=>{
       if(i===q.answer){if(!miniOK(q))return;
         m.style.animationPlayState='paused';m.classList.add('bonk');
-        m.querySelector('.mf').textContent='💫';miniNext(950);}
+        m.querySelector('.mf').textContent='💫';miniDone(q,h,og);}
       else{if(!miniNO())return;m.classList.remove('duck');void m.offsetWidth;m.classList.add('duck');}
     };
     h.appendChild(m);og.appendChild(h);
@@ -1449,10 +1549,10 @@ function checkTrain(q){
   const g=state.game;const ok=g.sen.picked.join(' ')===q.words.join(' ');
   render();
   const row=$('#slot');
-  if(ok){sfxGood();confetti();speak(q.words.join(' '));speakAs(gfi(),'칙칙폭폭! 기차 출발!',false);
+  if(ok){sfxGood();confetti();speak(q.words.join(' '));speakQ('칙칙폭폭! 기차 출발!');
     setTimeout(()=>{if(row)row.classList.add('depart');},350);
     setTimeout(()=>{g.sen=null;g.i++;render();},2600);}
-  else{sfxBad();speakAs(gfi(),'음, 기차 칸 순서가 좀 이상한걸? 다시 연결해 보자!',true);
+  else{sfxBad();speak('음, 순서가 좀 이상한걸? 다시 연결해 보자!');
     if(row)row.classList.add('tumble');
     setTimeout(()=>{g.sen={pool:shuffle(q.words.slice()),picked:[]};render();},1300);}
 }
@@ -1494,7 +1594,8 @@ function rStory(q){
       d.innerHTML=`<div class="bbody" style="background:${BCOL[i%4]};">${optInner(o,false)}</div><div class="str"></div>`;
       d.onclick=()=>{
         if(i===q2.answer){const g2=state.game;if(g2.lock)return;g2.lock=true;
-          sfxGood();speakAs(gfi(),'딩동댕! '+randPraise(),true);d.classList.add('popped');
+          sfxGood();speak('딩동댕!');d.classList.add('popped');
+          fadeOthers(og,d);
           setTimeout(()=>{g2.storyPage=0;g2.lock=false;g2.i++;render();},1900);}
         else{sfxBad();speak(randOops());
           d.classList.remove('boing');void d.offsetWidth;d.classList.add('boing');}
@@ -1666,7 +1767,7 @@ function rChalSpeech(c,it,gf){
   $('#bk').onclick=()=>{sfxClick();go('stage');};
   $('#hear').onclick=()=>{sfxClick();speak(it.word);};
   $('#mic').onclick=()=>startListening();
-  speak('말하기 도전! '+it.word+'! 라고 크게 말해 봐!');
+  speakQ('말하기 도전! '+it.word+'! 크게 말해 봐!');
 }
 function startListening(){
   const c=state.chal;if(c.busy)return;c.busy=true;c.heard=false;
@@ -1701,7 +1802,7 @@ function startListening(){
 }
 function switchToEar(){
   const c=state.chal;c.mode='ear';c.attempt=1;
-  speak('이번에는 귀 쫑긋 도전이야! 소리를 듣고 맞는 글자를 찾아 봐!');
+  speakQ('이번에는 귀 쫑긋 도전이야! 소리를 듣고 맞는 글자를 찾아 봐!');
   render();
 }
 function earPool(stageId,tk){
@@ -1745,7 +1846,7 @@ function rChalEar(c,it,gf){
     requestAnimationFrame(()=>requestAnimationFrame(()=>{tb.style.width='0%';}));
     c.earTimer=setTimeout(()=>{sfxBad();chalFail();},secs*1000);
   }
-  speak(it.word+'! 어디 있을까?');
+  speakQ(it.word+'! 어디 있을까?');
 }
 function chalPass(){
   const c=state.chal;const p=prog();
@@ -1755,8 +1856,8 @@ function chalPass(){
   sfxGood();
   if(c.idx<c.items.length-1){
     c.idx++;c.attempt=1;
-    speak('딩동댕! 다음 낱말!');
-    setTimeout(render,700);
+    speak('딩동댕! 정답이야!');
+    setTimeout(render,900);
   }else challengeSuccess();
 }
 function chalFail(){
@@ -1881,7 +1982,7 @@ function rGate(){
     else if(k==='✔'){
       if(parseInt(g.val,10)===g.a*g.b){
         sfxGood();
-        state.gate=null;go('admin'); /* 곱셈만 통과하면 진입 (비밀번호 단계 제거) */
+        state.gate=null;go('admin'); /* 곱셈만 통과하면 진입 */
         return;
       }
       sfxBad();gv.classList.add('err');setTimeout(()=>gv.classList.remove('err'),450);
@@ -1892,32 +1993,6 @@ function rGate(){
     gv.textContent=g.val||'\u00A0';
   });
   $('#bk').onclick=()=>{sfxClick();go('profiles');};
-}
-function rPin(){
-  state.pinVal=state.pinVal||'';
-  app.innerHTML=`
-   <div class="top"><button class="iconbtn" id="bk">←</button>
-     <span class="chip">🔐 비밀번호</span></div>
-   <div class="card center" style="max-width:340px;margin:20px auto;">
-     <div class="sub">부모님 비밀번호 4자리</div>
-     <div class="dots" id="pd">${'<span class="dot"></span>'.repeat(4)}</div>
-     <div id="ppad"></div>
-   </div>`;
-  const dots=()=>{ $('#pd').querySelectorAll('.dot').forEach((d,i)=>
-      d.classList.toggle('on',i<state.pinVal.length)); };
-  makePad($('#ppad'),k=>{
-    if(k==='⌫')state.pinVal=state.pinVal.slice(0,-1);
-    else if(k==='✔'){
-      if(state.pinVal===DB.pin){sfxGood();state.pinVal='';go('admin');return;}
-      sfxBad();state.pinVal='';dots();
-      const pd=$('#pd');pd.classList.add('err');
-      pd.animate([{transform:'translateX(0)'},{transform:'translateX(-8px)'},{transform:'translateX(8px)'},{transform:'translateX(0)'}],{duration:350});
-      return;
-    }
-    else if(state.pinVal.length<4)state.pinVal+=k;
-    dots();                                       /* 점 표시만 갱신, 패드 유지 */
-  });
-  $('#bk').onclick=()=>{sfxClick();state.pinVal='';go('profiles');};
 }
 /* ---------------- ADMIN ---------------- */
 const MILESTONES=[
@@ -1963,8 +2038,8 @@ function rAdmin(){
      </div>
    </div>
    <div class="card mb">
-     <h2>🔊 아이 목소리 선택</h2>
-     <div class="sub" style="text-align:left;margin-bottom:6px;">기기에 설치된 목소리 중에서 골라요. 목소리 종류는 폰·태블릿마다 달라요.</div>
+     <h2>🔊 대화 목소리 선택</h2>
+     <div class="sub" style="text-align:left;margin-bottom:6px;">음성 파일이 없는 대사에 쓰는 기기 목소리예요. 종류는 폰·태블릿마다 달라요.</div>
      <div id="voicebox"></div>
    </div>
    <div class="card mb">
@@ -1972,16 +2047,7 @@ function rAdmin(){
      <div class="sub" style="text-align:left;margin-bottom:2px;">이 앱의 커리큘럼(9단계) 기준 학습 위치예요. 공식 발달 검사가 아니에요.</div>
      <div id="dash"></div>
    </div>
-   <div class="card mb">
-     <h2>🔐 비밀번호</h2>
-     <div class="sub" style="text-align:left;">${DB.pin?'설정되어 있어요.':'아직 없어요. 4자리를 정하면 다음부터 곱셈 대신 비밀번호를 써요.'}</div>
-     <div style="display:flex;gap:8px;">
-       <input id="np" placeholder="4자리 숫자" maxlength="4" inputmode="numeric" style="flex:1;font-family:inherit;font-size:18px;
-         padding:10px 14px;border-radius:14px;border:3px solid #EAF2F8;">
-       <button class="btn" id="setP" style="width:auto;padding:10px 18px;font-size:17px;">${DB.pin?'변경':'설정'}</button>
-       ${DB.pin?'<button class="btn ghost" id="delP" style="width:auto;padding:10px 14px;font-size:17px;">해제</button>':''}
-     </div>
-   </div>`;
+`;
   app.innerHTML=html;
   /* --- 아이 목록 (날짜 없음 · 성별 토글 · 삭제) --- */
   const ul=$('#ulist');
@@ -2082,13 +2148,6 @@ function rAdmin(){
     dash.appendChild(box);
   });
   /* --- PIN --- */
-  $('#setP').onclick=async()=>{
-    const v=$('#np').value.trim();
-    if(!/^\d{4}$/.test(v)){alert('숫자 4자리로 정해 주세요.');return;}
-    DB.pin=v;await saveDB();sfxGood();alert('저장했어요!');render();
-  };
-  const dp=$('#delP');
-  if(dp)dp.onclick=async()=>{if(confirm('비밀번호를 해제할까요?')){DB.pin=null;await saveDB();render();}};
   $('#bk').onclick=()=>{sfxClick();go('profiles');};
 }
 /* ---------------- BOOT ---------------- */
