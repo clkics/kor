@@ -348,7 +348,7 @@ h2{font-size:23px;margin-bottom:10px;}
 <div id="app"></div>
 <script>
 /* ============================================================
-   한글 친구들 v5.5 — 발화 유령신호 버그 수정(멈춤 현상 해결)·쇼케이스 대폭 단축(음절만·설명 생략)·박수효과음 순차화·스테이지 화면 잠든 얼굴 반영
+   한글 친구들 v5.6 — 새 문제 음성 강제 리셋(콤보 후 무음 완전 해결)·안전장치 4~5초로 단축
    ============================================================ */
 /* ---------------- DATA: themes ---------------- */
 const THEMES={
@@ -597,7 +597,7 @@ function spNext(delay){
         const a=new Audio('audio/'+key+'.mp3');SP_AUDIO=a;a.volume=1;
         a.onended=a.onerror=()=>{if(stale())return;SP_AUDIO=null;fin();spNext(80);};
         a.play().catch(()=>{if(stale())return;SP_AUDIO=null;fin();spNext(0);});
-        SP_G=setTimeout(()=>{if(stale())return;if(SP_AUDIO===a){try{a.pause();}catch(e){}SP_AUDIO=null;fin();spNext(0);}},15000);
+        SP_G=setTimeout(()=>{if(stale())return;if(SP_AUDIO===a){try{a.pause();}catch(e){}SP_AUDIO=null;fin();spNext(0);}},4000);
       }catch(e){if(!stale()){SP_AUDIO=null;fin();spNext(0);}}
     }else{
       try{
@@ -609,7 +609,7 @@ function spNext(delay){
         u.onend=u.onerror=()=>{const i=UTTER_KEEP.indexOf(u);if(i>=0)UTTER_KEEP.splice(i,1);
           if(stale())return;fin();spNext(80);};
         speechSynthesis.speak(u);
-        SP_G=setTimeout(()=>{if(stale())return;fin();spNext(0);},12000);
+        SP_G=setTimeout(()=>{if(stale())return;fin();spNext(0);},4000);
       }catch(e){if(!stale()){fin();spNext(0);}}
     }
   },delay||0);
@@ -1296,8 +1296,11 @@ function speakPrompt(q,cancel){
 function clapsDurMs(n){return Math.round(((n-1)*0.4+0.22)*1000);}
 function bindSpk(q){
   const b=$('#spk');
-  const say=()=>{ if(q.claps){sfxClaps(q.claps);setTimeout(()=>speakPrompt(q,false),clapsDurMs(q.claps));} else speakPrompt(q,false); };
-  if(b)b.onclick=()=>{ if(q.claps){sfxClaps(q.claps);setTimeout(()=>speakPrompt(q,true),clapsDurMs(q.claps));} else speakPrompt(q,true); };
+  /* 새 문제가 뜨는 순간은 항상 '끊고 새로 시작'(cancel=true).
+     이전 발화열이 어떤 이유로 막혀 있어도(자동재생 차단 등) 여기서 강제 리셋되어
+     다음 문제 음성이 확실히 나옴 — '먹통' 방지의 핵심. */
+  const say=()=>{ if(q.claps){spCancel();sfxClaps(q.claps);setTimeout(()=>speakPrompt(q,false),clapsDurMs(q.claps));} else speakPrompt(q,true); };
+  if(b)b.onclick=()=>{ if(q.claps){spCancel();sfxClaps(q.claps);setTimeout(()=>speakPrompt(q,true),clapsDurMs(q.claps));} else speakPrompt(q,true); };
   bindPicto();
   say();
 }
@@ -1371,7 +1374,7 @@ function miniDone(q,keepEl,og){
       isLast?(()=>{lightAll();if(!rest)finish();}):null); /* 마지막 음절 끝나면 즉시 전체 반짝(재생 없이) */
   });
   if(rest)spSay(rest,-1,1.0,0.92,false,null,finish);   /* 짧은 보충 설명만(있을 때) */
-  if(g)g.advT=setTimeout(finish,8000);                 /* 안전 장치(단축) */
+  if(g)g.advT=setTimeout(finish,5000);                 /* 안전 장치(더 단축) */
 }
 /* ---- 🎈 풍선 팡팡 ---- */
 const BCOL=['#FFC7D2','#BDE3FF','#FFE9A8','#C9F2CF'];
